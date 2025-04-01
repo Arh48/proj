@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Generate
+{% endblock %}
+
+{% block main %}
+<style>
+    /* Subtle fade-in animation for the main elements */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Apply fade-in animation to the container */
+    .fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* Button hover effect */
+    .btn {
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn:hover {
+        background-color: #0056b3; /* Darker shade on hover */
+        transform: scale(1.05);
+    }
+
+    /* Card styles */
+    .card {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        background: white; /* Light mode background */
+    }
+
+    /* Dark mode styles */
+    body[data-theme='dark'] .card {
+        background: #343a40; /* Dark grey background */
+        color: white; /* White text for contrast */
+    }
+</style>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card text-center fadeIn">
+        <h1>Generate a Group Chat Key</h1>
+        <form action="/generate" method="post">
+            <div>
+                <button class="btn btn-primary" type="submit">Generate Key</button>
+            </div>
+        </form>
+        {% if key %}
+            <h2 class="mt-4">Your unique key is: <strong>{{ key }}</strong></h2>
+            <p>You can now share this key with others to join your group chat.</p>
+        {% endif %}
+        <div class="mt-4">
+            <a class="btn btn-secondary" href="/">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

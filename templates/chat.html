@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Join a Group Chat
+{% endblock %}
+
+{% block main %}
+<style>
+    /* Animation for the heading */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Animation for buttons */
+    .fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .zoomIn {
+        transition: transform 0.2s;
+    }
+
+    .zoomIn:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="text-center">
+        <h1 class="fadeIn">Join a Group Chat</h1>
+        <form action="/chat" method="post">
+            <div class="mb-3">
+                <input class="form-control" name="key" placeholder="Enter your key" type="text" required autocomplete="off">
+            </div>
+            <button class="btn btn-primary zoomIn" type="submit">Join Chat</button>
+            {% if error %}
+                <div class="alert alert-danger mt-3">{{ error }}</div>
+            {% endif %}
+        </form>
+        <a class="btn btn-secondary mt-3 zoomIn" href="/">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

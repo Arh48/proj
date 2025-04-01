@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <form action="/register" method="post" class="shadow p-4 rounded" style="background: #ffffff; transition: background-color 0.3s;">
+            <h2 class="text-center mb-4">Create Your Account</h2>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="confirmation" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirmation" name="confirmation" required>
+            </div>
+            <div class="mb-3">
+                <label for="emoji" class="form-label">Select an Emoji</label>
+                <select class="form-select" id="emoji" name="emoji">
+                    <option value="😀">😀</option>
+                    <option value="😁">😁</option>
+                    <option value="😄">😄</option>
+                    <option value="😅">😅</option>
+                    <option value="😂">😂</option>
+                    <option value="😍">😍</option>
+                    <option value="😈">😈</option>
+                    <option value="💩">💩</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+        </form>
+    </div>
+{% endblock %}
+
+<style>
+    /* Subtle animations */
+    .form-control,
+    .form-select {
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        outline: none;
+    }
+
+    form {
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+    form:hover {
+        transform: translateY(-5px);
+        background-color: #f8f9fa; /* Light gray on hover */
+    }
+</style>

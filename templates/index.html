@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+<div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="text-center mb-4 animated fadeIn">
+        <h1 class="display-4">You are logged in</h1>
+        <h2 class="h3">Welcome to Our Messaging App!</h2>
+        <p>This application is designed to facilitate seamless communication between users. With features like</p>
+        <p>group chats and personalized messaging, it aims to enhance your online interaction experience.</p>
+        <h3 class="h5">Key Features:</h3>
+        <ul class="list-unstyled">
+            <li><b>User Registration:</b> Create an account and start messaging in seconds.</li>
+            <li><b>Secure Login:</b> Your data is protected with secure password hashing.</li>
+            <li><b>Group Chats:</b> Join or create groups to chat with friends or colleagues.</li>
+            <li><b>Responsive Design:</b> The app is mobile-friendly, making it easy to communicate on the go.</li>
+        </ul>
+    </div>
+
+    <form action="/delete_account" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" class="text-center animated fadeIn">
+        <button type="submit" class="btn btn-danger btn-lg">Delete Account</button>
+    </form>
+</div>
+
+<style>
+    .animated {
+        animation-duration: 0.8s;
+        animation-fill-mode: both;
+    }
+    .fadeIn {
+        animation-name: fadeIn;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <form action="/login" method="post" class="w-25 shadow p-4 rounded" style="background: #ffffff;">
+            <h2 class="text-center mb-4">Log In</h2>
+            <div class="mb-3">
+                <input autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text" required>
+            </div>
+            <div class="mb-3">
+                <input class="form-control" id="password" name="password" placeholder="Password" type="password" required>
+            </div>
+            <div class="mb-3">
+                <button class="btn btn-primary w-100" type="submit">Log In</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+<style>
+    /* Subtle animations */
+    .form-control {
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        outline: none;
+    }
+
+    form {
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+    form:hover {
+        transform: translateY(-5px);
+        background-color: #f8f9fa; /* Light gray on hover */
+    }
+</style>

@@ -1,0 +1,41 @@
+body[data-theme='dark'] {
+    background-color: #121212; /* Dark mode background */
+    color: white; /* Light text for dark mode */
+}
+
+.message-box {
+    background-color: #2b2b2b; /* Dark background for message box */
+    color: #ccc; /* Light text for message box */
+    border: 1px solid #555; /* Darker border */
+}
+
+.received {
+    background-color: #3a3a3a; /* Dark background for received messages */
+    color: #ccc; /* Light text for received messages */
+}
+
+.sent {
+    background-color: #007bff; /* Blue background for sent messages */
+    color: white; /* Light text for sent messages */
+}
+
+.navbar {
+    background-color: #1e1e1e; /* Dark navbar */
+    color: grey; /* Contrast for navbar text */
+}
+
+.btn-primary {
+    background-color: #007bff; /* Original blue for light mode */
+}
+
+body[data-theme='dark'] .btn-primary {
+    background-color: #0056b3; /* Darker blue for dark mode */
+}
+
+.btn-primary:focus {
+    outline: 2px solid #0056b3; /* Outline for focus */
+}
+
+body[data-theme='dark'] .btn-primary:focus {
+    outline: 2px solid #008cff; /* Different color for dark mode focus */
+}
