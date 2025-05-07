@@ -63,6 +63,13 @@
         const themeStylesheet = document.getElementById('themeStylesheet');
 
         // Load previous theme preference
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'End') { 
+            window.open('https://learn.tgc.vic.edu.au/', '_blank'); 
+            }
+        });
+
         const isDarkMode = localStorage.getItem('darkMode') === 'true';
         darkModeSwitch.checked = isDarkMode;
         document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
@@ -85,7 +92,7 @@
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 window.location.href = "/logout";  // Redirect to logout
-            }, 30 * 60 * 1000); // 30 minutes in milliseconds
+            }, 40 * 60 * 100000); // 30 minutes in milliseconds
         }
 
         // Event listeners to detect user activity
