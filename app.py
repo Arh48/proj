@@ -134,7 +134,7 @@ def get_messages(key):
     try:
         with open("messages.json", "r") as file:
             data = json.load(file)
-
+    
         return jsonify({"messages": data.get(key, [])})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
