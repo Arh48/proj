@@ -66,7 +66,23 @@
         
         document.addEventListener('keydown', function(event) {
             if (event.key === 'End') { 
-            window.open('https://learn.tgc.vic.edu.au/', '_blank'); 
+                // Retrieve the panic URL from the text box in index.html
+                const panicUrl = localStorage.getItem('panicRedirectUrl');
+                if (panicUrl) {
+                    window.open(panicUrl, '_blank');
+                } else {
+                    alert("No panic URL set! Please enter a URL in the text box.");
+                }
+            }
+        });
+
+        // Store panic URL when user enters it
+        document.addEventListener('DOMContentLoaded', function() {
+            const panicInput = document.getElementById('panicUrl');
+            if (panicInput) {
+                panicInput.addEventListener('input', function() {
+                    localStorage.setItem('panicRedirectUrl', panicInput.value);
+                });
             }
         });
 
