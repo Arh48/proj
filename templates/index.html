@@ -17,12 +17,18 @@
             <li><b>Secureness</b> Your data is protected with secure password hashing.</li>
             <li><b>Support for homeless:</b> Do you only have 2 IQ like fraser? We can fix that by whooping your aaa.</li>
             <li><b>Responsive Design:</b> The website looks cool.</li>
+            <li><b>PANIC MODE ❗❗❗:</b> PRESS 'End' ON KEYBOARD TO EVADE THE AUTHORITIES</li>
         </ul>
     </div>
 
     <form action="/delete_account" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" class="text-center animated fadeIn">
         <button type="submit" class="btn btn-danger btn-lg">Delete Account</button>
     </form>
+    <form id="panicUrlForm" class="text-center animated fadeIn">
+        <label for="panicUrl">Enter a panic redirect URL:</label>
+        <input type="text" id="panicUrl" name="panicUrl" class="form-control mt-2" placeholder="https://example.com">
+    </form>
+    
 </div>
 
 <style>
