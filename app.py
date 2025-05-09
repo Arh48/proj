@@ -157,12 +157,12 @@ def post_message(key):
         if key not in data:
             data[key] = []  # Create an entry for this key if it doesn't exist
 
-        # Append new message
+        # Append new message with a timestamp including seconds
         data[key].append({
             "username": current_user.username,
             "emoji": current_user.emoji,
             "message": message,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().strftime("%A, %d %B %Y, %I:%M:%S %p")
         })
 
         # Save updated messages
@@ -173,7 +173,6 @@ def post_message(key):
     except Exception as e:
         print(f"Error posting message: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/delete_account", methods=["POST"])
 @login_required
