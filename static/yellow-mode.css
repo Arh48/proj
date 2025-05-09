@@ -1,0 +1,64 @@
+/* Dark Mode Theme */
+body[data-theme='dark'] {
+    background-color: #fbff00; /* Slightly softer black */
+    color: #E0E0E0; /* Softer white for reduced strain */
+}
+
+/* Logo Swap */
+body[data-theme='dark'] #navbarBrand img {
+    content: url('/static/logo-dark.png');
+}
+
+/* Message Box */
+.message-box {
+    background-color: #ffe600; /* Sleeker dark gray */
+    color: #CFCFCF; /* Softer contrast */
+    border: 1px solid #fff200; /* Dark but refined */
+}
+
+/* Received Messages */
+.received {
+    background-color: #fffb00; /* Deep gray */
+    color: #D1D1D1; /* Light gray for readability */
+}
+
+/* Sent Messages */
+.sent {
+    background-color: #1677E5; /* Polished blue */
+    color: #FFFFFF; /* Clear white */
+}
+
+/* Navbar */
+body[data-theme='dark'] .navbar-color {
+    background-color: #f2ff00; /* Solid dark for clarity */
+    color: #EAEAEA; /* Balanced white */
+    border-bottom: 1px solid #eeff00; /* Subtle definition */
+}
+
+/* Navigation Links */
+body[data-theme='dark'] .nav-link {
+    color: #DDDDDD; /* Slightly off-white */
+}
+
+body[data-theme='dark'] .nav-link:hover {
+    color: #AFAFAF; /* Gentle contrast */
+}
+
+/* Buttons */
+body[data-theme='dark'] .btn-primary {
+    background-color: #ffe600; /* Deep and polished blue */
+}
+
+body[data-theme='dark'] .btn-primary:focus {
+    outline: 2px solid #209CEE; /* More refined focus effect */
+}
+
+/* Inputs */
+#messageInput {
+    background-color: #ffe600ad; /* Balanced darkness */
+    color: #EAEAEA; /* Softer text color */
+}
+#messages {
+    background-color: #ffee00ba; /* Balanced darkness */
+    color: #EAEAEA; /* Softer text color */
+}
