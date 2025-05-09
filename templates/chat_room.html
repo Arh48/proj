@@ -102,24 +102,26 @@
     function formatDate(timestamp) {
         const date = new Date(timestamp);
 
-        // Extract components
-        const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' });
-        const month = date.toLocaleString('en-US', { month: 'long' });
-        const year = date.getFullYear();
+        // Convert to Melbourne timezone
+        const melbourneTime = new Intl.DateTimeFormat('en-US', {
+            timeZone: "Australia/Melbourne",
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        }).format(date);
 
-        // Format day with suffix (st, nd, rd, th)
+        // Add suffix to the date (1st, 2nd, etc.)
         let day = date.getDate();
-        const suffixes = ['th', 'st', 'nd', 'rd'];
+        const suffixes = ["th", "st", "nd", "rd"];
         const v = day % 100;
         const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
 
-        // Format time
-        const hours = date.getHours() % 12 || 12; // Convert to 12-hour format
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
-        const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
-
-        return `${dayOfWeek}, ${month} ${day}${suffix} ${year}, ${hours}:${minutes}:${seconds} ${ampm}`;
+        return melbourneTime.replace(/\d{1,2}/, `${day}${suffix}`);
     }
 
     function updateMessages(messages) {
