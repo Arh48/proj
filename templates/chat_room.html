@@ -102,28 +102,28 @@
     function formatDate(timestamp) {
         const utcDate = new Date(timestamp);
 
-        // Convert UTC time to Melbourne timezone manually
-        const melbourneOffset = 11 * 60; // AEDT is UTC+11 (adjust for AEST if needed)
-        const melbourneTime = new Date(utcDate.getTime() + melbourneOffset * 60000);
+        // Convert UTC time to Melbourne timezone using Intl.DateTimeFormat
+        const options = {
+            timeZone: "Australia/Melbourne",
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        };
 
-        // Extract components
-        const dayOfWeek = melbourneTime.toLocaleString('en-US', { weekday: 'long' });
-        const month = melbourneTime.toLocaleString('en-US', { month: 'long' });
-        const year = melbourneTime.getFullYear();
-        let day = melbourneTime.getDate();
+        let formattedTime = new Intl.DateTimeFormat('en-US', options).format(utcDate);
 
         // Apply correct suffixes (1st, 2nd, 3rd, etc.)
+        let day = utcDate.getDate();
         const suffixes = ["th", "st", "nd", "rd"];
         const v = day % 100;
         const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
 
-        // Format time properly
-        const hours = melbourneTime.getHours() % 12 || 12;
-        const minutes = melbourneTime.getMinutes().toString().padStart(2, '0');
-        const seconds = melbourneTime.getSeconds().toString().padStart(2, '0');
-        const ampm = melbourneTime.getHours() >= 12 ? 'PM' : 'AM';
-
-        return `${dayOfWeek}, ${month} ${day}${suffix} ${year}, ${hours}:${minutes}:${seconds} ${ampm}`;
+        return formattedTime.replace(/\b\d{1,2}\b/, `${day}${suffix}`);
     }
 
     function updateMessages(messages) {
