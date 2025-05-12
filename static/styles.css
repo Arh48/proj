@@ -55,7 +55,3 @@ body[data-theme='light'] .btn-primary:focus {
     color: #222222; /* Clear text contrast */
 }
 
-#messages {
-    background-color: #F2F2F2; /* Soft neutral gray */
-    color: #222222; /* Strong readability */
-}
