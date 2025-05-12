@@ -1,64 +1,67 @@
-/* Dark Mode Theme */
-body[data-theme='dark'] {
-    background-color: #fbff00; /* Slightly softer black */
-    color: #E0E0E0; /* Softer white for reduced strain */
-}
-
-/* Logo Swap */
-body[data-theme='dark'] #navbarBrand img {
-    content: url('/static/logo-dark.png');
+/* ULTRA-BLINDING YELLOW MODE */
+body[data-theme='yellow-ultra'] {
+    background-color: #FFFF00; /* PURE, unfiltered yellow */
+    color: #000000; /* STRONG contrast */
 }
 
 /* Message Box */
 .message-box {
-    background-color: #ffe600; /* Sleeker dark gray */
-    color: #CFCFCF; /* Softer contrast */
-    border: 1px solid #fff200; /* Dark but refined */
+    background-color: #FFEE00; /* Intense neon-like yellow */
+    color: #000000; /* Deep contrast */
+    border: 3px solid #FFD700; /* GOLDEN border */
 }
 
 /* Received Messages */
 .received {
-    background-color: #fffb00; /* Deep gray */
-    color: #D1D1D1; /* Light gray for readability */
+    background-color: #FFF600; /* Almost fluorescent yellow */
+    color: #000000; /* Crisp contrast */
 }
 
 /* Sent Messages */
 .sent {
-    background-color: #1677E5; /* Polished blue */
-    color: #FFFFFF; /* Clear white */
+    background-color: #FFC400; /* Ultra-golden yellow */
+    color: #000000; /* Maximum clarity */
 }
 
+
+
+
 /* Navbar */
-body[data-theme='dark'] .navbar-color {
-    background-color: #f2ff00; /* Solid dark for clarity */
-    color: #EAEAEA; /* Balanced white */
-    border-bottom: 1px solid #eeff00; /* Subtle definition */
+body[data-theme='yellow-ultra'] .navbar-color {
+    background-color: #000000; /* Overwhelming golden yellow */
+    color: #000000; /* Balanced contrast */
+    border-bottom: 3px solid #FFB300; /* Defined brightness */
 }
 
 /* Navigation Links */
-body[data-theme='dark'] .nav-link {
-    color: #DDDDDD; /* Slightly off-white */
+body[data-theme='yellow-ultra'] .nav-link {
+    color: #111100; /* Dark yellow tint */
 }
 
-body[data-theme='dark'] .nav-link:hover {
-    color: #AFAFAF; /* Gentle contrast */
+body[data-theme='yellow-ultra'] .nav-link:hover {
+    color: #000000; /* TOTAL contrast */
 }
 
 /* Buttons */
-body[data-theme='dark'] .btn-primary {
-    background-color: #ffe600; /* Deep and polished blue */
+body[data-theme='yellow-ultra'] .btn-primary {
+    background-color: #FFFF00; /* PURE highlighter yellow */
+    color: #000000; /* Bold contrast */
 }
 
-body[data-theme='dark'] .btn-primary:focus {
-    outline: 2px solid #209CEE; /* More refined focus effect */
+body[data-theme='yellow-ultra'] .btn-primary:focus {
+    outline: 3px solid #FFA700; /* STRIKING orange glow */
 }
 
 /* Inputs */
 #messageInput {
-    background-color: #ffe600ad; /* Balanced darkness */
-    color: #EAEAEA; /* Softer text color */
+    background-color: #FFF500; /* MAXIMUM brightness */
+    color: #000000; /* Clear readability */
 }
+
 #messages {
-    background-color: #ffee00ba; /* Balanced darkness */
-    color: #EAEAEA; /* Softer text color */
+    background-color: #FFF200; /* Overpowering radiance */
+    color: #000000; /* Strong contrast */
+}
+body {
+    background-color: #FFFF00 !important;
 }
