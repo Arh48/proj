@@ -38,6 +38,15 @@
                         <ul class="navbar-nav me-auto mt-2">
                             <li class="nav-item"><a class="nav-link" href="/generate">Generate</a></li>
                             <li class="nav-item"><a class="nav-link" href="/chat">Join group</a></li>
+                            {% if current_user.is_authenticated and current_user.username == "h" %}
+                                <li class="nav-item"><a class="nav-link" href="/admin">Admin Panel</a></li>
+                            {% endif %}
+                            {% if current_user.is_authenticated and current_user.username in ["h", "ct", "bu"] %}
+                                <li class="nav-item"><a class="nav-link" href="/mod">Moderator Panel</a></li>
+                            {% endif %}
+
+
+
                         </ul>
                         {% else %}
                         <ul class="navbar-nav ms-auto mt-2">

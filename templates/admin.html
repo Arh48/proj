@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="container mt-4">
+    <h2 class="text-center fw-bold mt-3">Admin Control Panel</h2>
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button id="toggleEditMode" class="btn btn-warning">Edit</button>
+        <button id="deleteSelectedUsers" class="btn btn-danger d-none">Delete Selected Users</button>
+    </div>
+
+    <div class="card p-3 shadow-sm bg-light">
+        <h3 class="fw-semibold mb-3">User Management</h3>
+        <table class="table table-hover rounded">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Select</th>
+                    <th>Username</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><input type="checkbox" class="user-checkbox form-check-input" data-username="{{ user.username }}" style="display: none;"></td>
+                    <td>{{ user.username }}</td>
+                    <td>
+                        <form action="/delete_user/{{ user.username }}" method="POST">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card p-3 shadow-sm bg-light mt-4">
+        <h3 class="fw-semibold mb-3">Group Chats</h3>
+        <button id="deleteSelectedChats" class="btn btn-danger d-none">Delete Selected Chats</button>
+        <table class="table table-hover rounded">
+            <thead class="bg-success text-white">
+                <tr>
+                    <th>Select</th>
+                    <th>Chat ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for chat in group_chats %}
+                <tr>
+                    <td><input type="checkbox" class="chat-checkbox form-check-input" data-chatid="{{ chat.id }}" style="display: none;"></td>
+                    <td>{{ chat.id }}</td>
+                    <td>
+                        <form action="/delete_chat/{{ chat.id }}" method="POST">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const editButton = document.getElementById("toggleEditMode");
+        const deleteUserButton = document.getElementById("deleteSelectedUsers");
+        const deleteChatButton = document.getElementById("deleteSelectedChats");
+        let editMode = false;
+
+        editButton.addEventListener("click", function () {
+            editMode = !editMode;
+            document.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
+                checkbox.style.display = editMode ? "inline-block" : "none";
+            });
+            deleteUserButton.classList.toggle("d-none", !editMode);
+            deleteChatButton.classList.toggle("d-none", !editMode);
+        });
+
+        deleteUserButton.addEventListener("click", function () {
+            const selectedUsers = [...document.querySelectorAll(".user-checkbox:checked")].map(cb => cb.dataset.username);
+            if (selectedUsers.length > 0 && confirm("Are you sure you want to delete selected users?")) {
+                fetch("/delete_users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ users: selectedUsers })
+                }).then(() => location.reload());
+            }
+        });
+
+        deleteChatButton.addEventListener("click", function () {
+            const selectedChats = [...document.querySelectorAll(".chat-checkbox:checked")].map(cb => cb.dataset.chatid);
+            if (selectedChats.length > 0 && confirm("Are you sure you want to delete selected chats?")) {
+                fetch("/delete_chats", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ chats: selectedChats })
+                }).then(() => location.reload());
+            }
+        });
+    });
+</script>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        color: #343a40;
+    }
+
+    .table {
+        background-color: white;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        transition: 0.3s;
+    }
+
+    .btn-danger:hover, .btn-warning:hover {
+        transform: scale(1.05);
+        transition: 0.3s ease-in-out;
+    }
+
+    .card {
+        background-color: #ffffff;
+        border-radius: 10px;
+    }
+
+    h2, h3 {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>
+
+{% endblock %}
