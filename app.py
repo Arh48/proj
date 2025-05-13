@@ -271,6 +271,14 @@ def mod_panel():  # This name must match in url_for()
 
 
 
+from flask import jsonify, session
+
+@app.route("/check_timeout")
+def check_timeout():
+    # Replace this with your actual logic to check timeout
+    is_timed_out = session.get("timed_out", False)  # Example session variable
+
+    return jsonify({"timed_out": is_timed_out})
 
 if __name__ == "__main__":
     app.run(debug=True)
