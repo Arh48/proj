@@ -8,7 +8,6 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h3 class="mb-0">Group Code: {{ key }}</h3>
-    
     </div>
 
     <div class="chat-window mt-4">
@@ -99,23 +98,18 @@
 
     function formatDate(timestamp) {
         const utcDate = new Date(timestamp);
-
-        // Manually shift UTC to Melbourne time
         const melbourneOffset = (utcDate.getMonth() >= 9 || utcDate.getMonth() <= 2) ? 11 : 10; 
         const melbourneTime = new Date(utcDate.getTime() + melbourneOffset * 60 * 60 * 1000);
 
-        // Extract components
         const dayOfWeek = melbourneTime.toLocaleString('en-US', { weekday: 'long' });
         const month = melbourneTime.toLocaleString('en-US', { month: 'long' });
         const year = melbourneTime.getFullYear();
         let day = melbourneTime.getDate();
 
-        // Apply correct suffixes (1st, 2nd, 3rd, etc.)
         const suffixes = ["th", "st", "nd", "rd"];
         const v = day % 100;
         const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
 
-        // Format time properly
         const hours = melbourneTime.getHours() % 12 || 12;
         const minutes = melbourneTime.getMinutes().toString().padStart(2, '0');
         const seconds = melbourneTime.getSeconds().toString().padStart(2, '0');
@@ -125,15 +119,15 @@
     }
 
     function updateMessages(messages) {
+        const atBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 10;
         messagesContainer.innerHTML = '';
+
         messages.forEach(message => {
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container');
 
             const timestampElement = document.createElement('div');
             timestampElement.classList.add('timestamp');
-
-            // Apply correctly converted timestamp
             timestampElement.textContent = formatDate(message.timestamp);
 
             const messageElement = document.createElement('div');
@@ -145,37 +139,28 @@
             messagesContainer.appendChild(messageContainer);
         });
 
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (atBottom) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
     }
 
     setInterval(fetchMessages, 3000);
 
-    document.getElementById('sendMessageForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const messageInput = document.getElementById('messageInput');
-
-        if (messageInput.value.trim() === '') return;
-
+    async function checkTimeout() {
         try {
-            const response = await fetch(`/chat_room/${key}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: messageInput.value })
-            });
+            const response = await fetch('/check_timeout');
+            const data = await response.json();
 
-            if (response.ok) {
-                messageInput.value = '';
-                fetchMessages();
-            } else {
-                const data = await response.json();
-                console.error("Error sending message:", data.error || response.status);
+            if (data.timed_out) {
+                window.location.href = "/chat";
             }
         } catch (error) {
-            console.error("Fetch error:", error);
+            console.error("Timeout check error:", error);
         }
-    });
+    }
+
+    checkTimeout();
+    setInterval(checkTimeout, 3000);
 </script>
 
 {% endblock %}
