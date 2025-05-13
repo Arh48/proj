@@ -1,6 +1,6 @@
 import os
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, jsonify
+from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_user, login_required, UserMixin, current_user
@@ -188,6 +188,11 @@ def delete_account():
 @app.route("/chat", methods=['GET', 'POST'])
 @login_required
 def chat():
+    timeout_until = timeouts.get(current_user.username)
+
+    if timeout_until and datetime.now() < datetime.strptime(timeout_until, "%Y-%m-%d %H:%M:%S"):
+        return render_template("timeout.html", timeout_until=timeout_until)
+
     if request.method == "POST":
         key = request.form.get("key")
 
@@ -199,11 +204,73 @@ def chat():
 
     return render_template("chat.html")
 
-@app.route("/delete_chat/<key>", methods=["POST"])
+
+@app.route("/delete_chat/<chat_id>", methods=["POST"])
 @login_required
-def delete_chat(key):
-    db.execute("DELETE FROM group_chats WHERE id = ?", key)
-    return redirect("/")
+def delete_chat(chat_id):
+    if current_user.username != "h":
+        flash("Access denied: Admin privileges required.")
+        return redirect("/admin")
+
+    db.execute("DELETE FROM group_chats WHERE id = ?", chat_id)
+    flash(f"Group chat '{chat_id}' has been deleted.")
+    return redirect("/admin")
+
+
+@app.route("/admin")
+@login_required
+def admin():
+    if current_user.username != "h":
+        flash("Access denied: Admin privileges required.")
+        return redirect("/")
+
+    users = db.execute("SELECT username, hash FROM users")
+    group_chats = db.execute("SELECT id FROM group_chats")  # Only fetching chat IDs
+
+    return render_template("admin.html", users=users, group_chats=group_chats)
+
+@app.route("/delete_user/<username>", methods=["POST"])
+@login_required
+def delete_user(username):
+    if current_user.username != "h":
+        flash("Access denied: Admin privileges required.")
+        return redirect("/admin")
+
+    db.execute("DELETE FROM users WHERE username = ?", username)
+    flash(f"User '{username}' has been deleted.")
+    return redirect("/admin")
+from datetime import datetime, timedelta
+
+# Temporary storage for timed-out users
+timeouts = {}
+
+@app.route("/mod", methods=["GET", "POST"])
+@login_required
+def mod_panel():  # This name must match in url_for()
+    if current_user.username not in ["h", "ct", "bu", "Diimi"]:
+        flash("Access denied: Moderator privileges required.")
+        return redirect(url_for("index"))  # Redirect unauthorized users
+
+    if request.method == "POST":
+        username = request.form.get("username")
+        timeout_duration = int(request.form.get("timeout_duration"))
+
+        if timeout_duration < 1 or timeout_duration > 60:
+            flash("Invalid timeout duration! Choose between 1 and 60 minutes.")
+            return redirect(url_for("mod_panel"))
+
+        # Set timeout expiration
+        timeout_until = (datetime.now() + timedelta(minutes=timeout_duration)).strftime("%Y-%m-%d %H:%M:%S")
+        timeouts[username] = timeout_until
+
+        flash(f"User {username} has been timed out for {timeout_duration} minutes!")
+        return redirect(url_for("mod_panel"))
+
+    users = [{"username": user["username"]} for user in db.execute("SELECT username FROM users")]
+    return render_template("mod.html", users=users, timeouts=timeouts)
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
