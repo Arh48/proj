@@ -21,11 +21,17 @@
                 <td>{{ user.username }}</td>
                 <td>{{ timeouts.get(user.username, "Active") }}</td>
                 <td>
-                    <form method="POST">
+                    <!-- Timeout User Form -->
+                    <form method="POST" action="{{ url_for('mod_panel') }}" style="display: inline-block;">
                         <input type="hidden" name="username" value="{{ user.username }}">
                         <label>Timeout (1-60 mins):</label>
                         <input type="number" name="timeout_duration" min="1" max="60" required>
                         <button type="submit" class="btn btn-danger">Timeout User</button>
+                    </form>
+
+                    <!-- Cancel Timeout Form -->
+                    <form method="POST" action="{{ url_for('cancel_timeout', username=user.username) }}" style="display: inline-block; margin-left: 10px;">
+                        <button type="submit" class="btn btn-warning">Cancel Timeout</button>
                     </form>
                 </td>
             </tr>
