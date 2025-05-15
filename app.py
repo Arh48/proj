@@ -269,6 +269,30 @@ def mod_panel():  # This name must match in url_for()
     users = [{"username": user["username"]} for user in db.execute("SELECT username FROM users")]
     return render_template("mod.html", users=users, timeouts=timeouts)
 
+@app.route("/check_timeout")
+@login_required
+def check_timeout():
+    timeout_until = timeouts.get(current_user.username)
+
+    if timeout_until and datetime.now() < datetime.strptime(timeout_until, "%Y-%m-%d %H:%M:%S"):
+        return jsonify({"timed_out": True})
+
+
+    return jsonify({"timed_out": False})
+@app.route("/cancel_timeout/<username>", methods=["POST"])
+@login_required
+def cancel_timeout(username):
+    if current_user.username not in ["h", "ct", "bu", "Diimi"]:  # Moderator check
+        flash("Access denied: Moderator privileges required.")
+        return redirect(url_for("mod_panel"))
+
+    if username in timeouts:
+        del timeouts[username]  # Remove timeout entry
+        flash(f"Timeout for {username} has been canceled.")
+    else:
+        flash(f"{username} is already active.")
+
+    return redirect(url_for("mod_panel"))
 
 
 
