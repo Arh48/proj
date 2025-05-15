@@ -294,6 +294,22 @@ def cancel_timeout(username):
 
     return redirect(url_for("mod_panel"))
 
+@app.route("/reset_messages", methods=["POST"])
+@login_required
+def reset_messages():
+    if current_user.username != "h":  # Ensure only admin can reset
+        flash("Access denied: Admin privileges required.")
+        return redirect(url_for("admin"))
+
+    try:
+        with open("messages.json", "w") as file:
+            json.dump({}, file)  # Overwrite with empty object
+
+        flash("All messages have been reset.")
+    except Exception as e:
+        flash(f"Error resetting messages: {str(e)}")
+
+    return redirect(url_for("admin"))
 
 
 if __name__ == "__main__":
