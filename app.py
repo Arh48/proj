@@ -1,13 +1,17 @@
 import os
+import threading
+import random
+import json
+from datetime import datetime, timedelta
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
+from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for, send_from_directory
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import LoginManager, login_user, login_required, UserMixin, current_user
-import random
-import json
-from datetime import datetime
-
+from werkzeug.utils import secure_filename
+import shutil as shutil
+from urllib.parse import unquote
+from flask import jsonify, request, redirect, url_for, flash, render_template
 # Database setup
 db = SQL("sqlite:///logins.db")
 
@@ -15,7 +19,7 @@ db = SQL("sqlite:///logins.db")
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+Session(app) 
 
 # Initialize LoginManager
 login_manager = LoginManager()
@@ -32,8 +36,8 @@ def load_user(user_id):
     if user:
         user_obj = User()
         user_obj.id = user[0]['id']
-        user_obj.username = user[0]['username']  # Add username attribute
-        user_obj.emoji = user[0]['emoji']  # Add emoji attribute
+        user_obj.username = user[0]['username']
+        user_obj.emoji = user[0]['emoji']
         return user_obj
     return None
 
@@ -50,7 +54,7 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         confirmation = request.form.get('confirmation')
-        emoji = request.form.get('emoji')  # New emoji field
+        emoji = request.form.get('emoji')
 
         if not username or not password:
             return render_template("error.html", message="Please fill in all fields.")
@@ -68,7 +72,7 @@ def register():
         user = User()
         user.id = db.execute("SELECT id FROM users WHERE username = ?", username)[0]["id"]
         user.username = username
-        user.emoji = emoji  # Set emoji for user
+        user.emoji = emoji
         login_user(user)
 
         return redirect("/")
@@ -93,7 +97,7 @@ def login():
         user = User()
         user.id = rows[0]["id"]
         user.username = rows[0]["username"]
-        user.emoji = rows[0]["emoji"]  # Load emoji
+        user.emoji = rows[0]["emoji"]
         login_user(user)
 
         return redirect("/")
@@ -110,7 +114,10 @@ def index():
     if current_user.is_authenticated:
         return render_template("index.html")
     else:
+        
         return render_template("home1.html")
+        
+
 
 @app.route("/generate", methods=['GET', 'POST'])
 @login_required
@@ -134,7 +141,6 @@ def get_messages(key):
     try:
         with open("messages.json", "r") as file:
             data = json.load(file)
-    
         return jsonify({"messages": data.get(key, [])})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -142,30 +148,31 @@ def get_messages(key):
 @app.route("/chat_room/<key>", methods=['POST'])
 @login_required
 def post_message(key):
-    message = request.json.get('message')
+    message = request.json.get('message', '')
+    image_url = request.json.get('image_url', None)
 
-    # Check if the message is provided
-    if not message:
+    if not message and not image_url:
         return jsonify({"error": "Message cannot be empty."}), 400
 
     try:
-        # Load existing messages
         with open("messages.json", "r") as file:
             data = json.load(file)
 
-        # Check if the key exists in the chat data
         if key not in data:
-            data[key] = []  # Create an entry for this key if it doesn't exist
+            data[key] = []
 
-        # Append new message with a timestamp including seconds
-        data[key].append({
+        msg_data = {
             "username": current_user.username,
             "emoji": current_user.emoji,
-            "message": message,
-            "timestamp": datetime.now().strftime("%A, %d %B %Y, %I:%M:%S %p")
-        })
+            "timestamp": datetime.now().isoformat()
+        }
+        if message:
+            msg_data["message"] = message
+        if image_url:
+            msg_data["image_url"] = image_url
 
-        # Save updated messages
+        data[key].append(msg_data)
+
         with open("messages.json", "w") as file:
             json.dump(data, file)
 
@@ -177,10 +184,7 @@ def post_message(key):
 @app.route("/delete_account", methods=["POST"])
 @login_required
 def delete_account():
-    # Delete the user's account from the database
     db.execute("DELETE FROM users WHERE id = ?", current_user.id)
-
-    # Log the user out and redirect to the home page or login page
     logout()
     flash("Your account has been deleted.")
     return redirect("/")
@@ -195,7 +199,6 @@ def chat():
 
     if request.method == "POST":
         key = request.form.get("key")
-
         chat_group = db.execute("SELECT * FROM group_chats WHERE id = ?", key)
         if len(chat_group) == 0:
             return render_template("chat.html", error="Invalid key. Please try again.")
@@ -203,7 +206,6 @@ def chat():
         return render_template("chat_room.html", key=key)
 
     return render_template("chat.html")
-
 
 @app.route("/delete_chat/<chat_id>", methods=["POST"])
 @login_required
@@ -216,18 +218,83 @@ def delete_chat(chat_id):
     flash(f"Group chat '{chat_id}' has been deleted.")
     return redirect("/admin")
 
-
 @app.route("/admin")
 @login_required
 def admin():
     if current_user.username != "h":
         flash("Access denied: Admin privileges required.")
         return redirect("/")
-
     users = db.execute("SELECT username, hash FROM users")
-    group_chats = db.execute("SELECT id FROM group_chats")  # Only fetching chat IDs
+    group_chats = db.execute("SELECT id FROM group_chats")
+    images_base = os.path.join(os.getcwd(), "IMAGES")
+    image_folders = {}
+    if os.path.isdir(images_base):
+        for key in os.listdir(images_base):
+            folder_path = os.path.join(images_base, key)
+            if os.path.isdir(folder_path):
+                files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+                image_folders[key] = files
+    return render_template("admin.html",
+                           users=users,
+                           group_chats=group_chats,
+                           image_folders=image_folders)
 
-    return render_template("admin.html", users=users, group_chats=group_chats)
+@app.route('/delete_images_folder/<key>', methods=['POST'])
+@login_required
+def delete_images_folder(key):
+    if current_user.username != "h":
+        flash("Access denied: Admin privileges required.")
+        return redirect("/")
+    images_base = os.path.join(os.getcwd(), "IMAGES")
+    target = os.path.join(images_base, key)
+    if os.path.isdir(target):
+        shutil.rmtree(target)
+        flash(f"Deleted folder /IMAGES/{key}")
+    return redirect(url_for('admin'))
+
+@app.route('/delete_images_folders', methods=['POST'])
+@login_required
+def delete_images_folders():
+    if current_user.username != "h":
+        return jsonify(success=False, error="Access denied"), 403
+    data = request.get_json()
+    keys = data.get('keys', [])
+    images_base = os.path.join(os.getcwd(), "IMAGES")
+    for key in keys:
+        folder = os.path.join(images_base, key)
+        if os.path.isdir(folder):
+            shutil.rmtree(folder)
+    return jsonify(success=True)
+
+@app.route('/delete_image/<key>/<path:filename>', methods=['POST'])
+@login_required
+def delete_image(key, filename):
+    if current_user.username != "h":
+        flash("Access denied: Admin privileges required.")
+        return redirect("/")
+    images_base = os.path.join(os.getcwd(), "IMAGES")
+    decoded_filename = unquote(filename)
+    file_path = os.path.join(images_base, key, decoded_filename)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+        flash(f"Deleted image {decoded_filename} from folder {key}")
+    return redirect(url_for('admin'))
+
+@app.route('/delete_images', methods=['POST'])
+@login_required
+def delete_images():
+    if current_user.username != "h":
+        return jsonify(success=False, error="Access denied"), 403
+    data = request.get_json()
+    images = data.get('images', [])
+    images_base = os.path.join(os.getcwd(), "IMAGES")
+    for img in images:
+        key = img.get('key')
+        filename = img.get('image')
+        file_path = os.path.join(images_base, key, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+    return jsonify(success=True)
 
 @app.route("/delete_user/<username>", methods=["POST"])
 @login_required
@@ -239,17 +306,61 @@ def delete_user(username):
     db.execute("DELETE FROM users WHERE username = ?", username)
     flash(f"User '{username}' has been deleted.")
     return redirect("/admin")
-from datetime import datetime, timedelta
 
-# Temporary storage for timed-out users
+# --- IMAGE UPLOAD, SERVE, AND AUTO-DELETE ---
+UPLOAD_BASE = os.path.join(os.getcwd(), "IMAGES")
+
+def delete_file_later(path, seconds=300):
+    def remove():
+        try:
+            os.remove(path)
+            # Optionally also remove empty group folder if no files left
+            group_folder = os.path.dirname(path)
+            if not os.listdir(group_folder):
+                os.rmdir(group_folder)
+        except Exception as e:
+            print(f"Failed to delete {path}: {e}")
+    timer = threading.Timer(seconds, remove)
+    timer.start()
+
+@app.route("/IMAGES/<key>/", methods=["POST"])
+@login_required
+def upload_image(key):
+    if 'image' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    filename = secure_filename(file.filename)
+    group_path = os.path.join(UPLOAD_BASE, str(key))
+    os.makedirs(group_path, exist_ok=True)
+    full_path = os.path.join(group_path, filename)
+    file.save(full_path)
+
+    # Schedule deletion in 5 minutes (300 seconds)
+    delete_file_later(full_path, 300)
+
+    # URL for fetching the image (should match the one used in your JS)
+    image_url = url_for('serve_image', key=key, filename=filename)
+    return jsonify({"image_url": image_url})
+
+@app.route("/IMAGES/<key>/<filename>")
+def serve_image(key, filename):
+    return send_from_directory(os.path.join(UPLOAD_BASE, str(key)), filename)
+
+# --- END IMAGE UPLOAD SECTION ---
+
+from datetime import datetime, timedelta
 timeouts = {}
 
 @app.route("/mod", methods=["GET", "POST"])
 @login_required
-def mod_panel():  # This name must match in url_for()
-    if current_user.username not in ["h", "ct", "bu", "Diimi"]:
+def mod_panel():
+    # Normalize username (strip spaces, lowercase) for the check
+    if current_user.username.strip().lower() not in ["h", "Diimi", "bu", "ct"]:
         flash("Access denied: Moderator privileges required.")
-        return redirect(url_for("index"))  # Redirect unauthorized users
+        return redirect(url_for("index"))
 
     if request.method == "POST":
         username = request.form.get("username")
@@ -259,7 +370,6 @@ def mod_panel():  # This name must match in url_for()
             flash("Invalid timeout duration! Choose between 1 and 60 minutes.")
             return redirect(url_for("mod_panel"))
 
-        # Set timeout expiration
         timeout_until = (datetime.now() + timedelta(minutes=timeout_duration)).strftime("%Y-%m-%d %H:%M:%S")
         timeouts[username] = timeout_until
 
@@ -273,21 +383,19 @@ def mod_panel():  # This name must match in url_for()
 @login_required
 def check_timeout():
     timeout_until = timeouts.get(current_user.username)
-
     if timeout_until and datetime.now() < datetime.strptime(timeout_until, "%Y-%m-%d %H:%M:%S"):
         return jsonify({"timed_out": True})
-
-
     return jsonify({"timed_out": False})
+
 @app.route("/cancel_timeout/<username>", methods=["POST"])
 @login_required
 def cancel_timeout(username):
-    if current_user.username not in ["h", "ct", "bu", "Diimi"]:  # Moderator check
+    if current_user.username not in ["h", "ct", "bu", "Diimi"]:
         flash("Access denied: Moderator privileges required.")
         return redirect(url_for("mod_panel"))
 
     if username in timeouts:
-        del timeouts[username]  # Remove timeout entry
+        del timeouts[username]
         flash(f"Timeout for {username} has been canceled.")
     else:
         flash(f"{username} is already active.")
@@ -297,20 +405,19 @@ def cancel_timeout(username):
 @app.route("/reset_messages", methods=["POST"])
 @login_required
 def reset_messages():
-    if current_user.username != "h":  # Ensure only admin can reset
+    if current_user.username != "h":
         flash("Access denied: Admin privileges required.")
-        return redirect(url_for("admin"))
-
+        return redirect("/admin")
     try:
         with open("messages.json", "w") as file:
-            json.dump({}, file)  # Overwrite with empty object
-
+            json.dump({}, file)
         flash("All messages have been reset.")
     except Exception as e:
         flash(f"Error resetting messages: {str(e)}")
-
     return redirect(url_for("admin"))
 
-
 if __name__ == "__main__":
+    # Ensure IMAGES directory exists
+    if not os.path.exists(UPLOAD_BASE):
+        os.makedirs(UPLOAD_BASE)
     app.run(debug=True)

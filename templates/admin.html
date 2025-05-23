@@ -4,11 +4,13 @@
 <div class="container mt-4">
     <h2 class="text-center fw-bold mt-3">Admin Control Panel</h2>
     
+    <!-- Edit Mode Controls -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <button id="toggleEditMode" class="btn btn-warning">Edit</button>
         <button id="deleteSelectedUsers" class="btn btn-danger d-none">Delete Selected Users</button>
     </div>
 
+    <!-- User Management Table -->
     <div class="card p-3 shadow-sm bg-light">
         <h3 class="fw-semibold mb-3">User Management</h3>
         <table class="table table-hover rounded">
@@ -22,7 +24,9 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td><input type="checkbox" class="user-checkbox form-check-input" data-username="{{ user.username }}" style="display: none;"></td>
+                    <td>
+                        <input type="checkbox" class="user-checkbox form-check-input" data-username="{{ user.username }}" style="display: none;">
+                    </td>
                     <td>{{ user.username }}</td>
                     <td>
                         <form action="/delete_user/{{ user.username }}" method="POST">
@@ -35,6 +39,7 @@
         </table>
     </div>
 
+    <!-- Group Chats Table -->
     <div class="card p-3 shadow-sm bg-light mt-4">
         <h3 class="fw-semibold mb-3">Group Chats</h3>
         <button id="deleteSelectedChats" class="btn btn-danger d-none">Delete Selected Chats</button>
@@ -49,7 +54,9 @@
             <tbody>
                 {% for chat in group_chats %}
                 <tr>
-                    <td><input type="checkbox" class="chat-checkbox form-check-input" data-chatid="{{ chat.id }}" style="display: none;"></td>
+                    <td>
+                        <input type="checkbox" class="chat-checkbox form-check-input" data-chatid="{{ chat.id }}" style="display: none;">
+                    </td>
                     <td>{{ chat.id }}</td>
                     <td>
                         <form action="/delete_chat/{{ chat.id }}" method="POST">
@@ -62,6 +69,7 @@
         </table>
     </div>
 
+    <!-- Reset Messages -->
     <div class="card p-3 shadow-sm bg-light mt-4">
         <h3 class="fw-semibold mb-3">Reset Messages</h3>
         <form action="{{ url_for('reset_messages') }}" method="post" id="resetMessagesForm">
@@ -71,14 +79,84 @@
             </button>
         </form>
     </div>
-    
+
+    <!-- Image Management Table -->
+    <div class="card p-3 shadow-sm bg-light mt-4">
+        <h3 class="fw-semibold mb-3">Image Management <span class="text-muted" style="font-size:12px;">(from /IMAGES/&lt;key&gt;)</span></h3>
+        <button id="deleteSelectedImageFolders" class="btn btn-danger d-none mb-2">Delete Selected Image Folders</button>
+        <button id="deleteSelectedImages" class="btn btn-danger d-none mb-2 ms-2">Delete Selected Images</button>
+        <div class="table-responsive" style="max-height:400px;overflow:auto;">
+        <table class="table table-hover rounded align-middle">
+            <thead class="bg-info text-white">
+                <tr>
+                    <th>Select Folder</th>
+                    <th>Folder Key</th>
+                    <th>Select Image</th>
+                    <th>Images</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, images in image_folders.items() %}
+                <tr>
+                    <td>
+                        <input type="checkbox" class="image-folder-checkbox form-check-input" data-key="{{ key }}" style="display: none;">
+                    </td>
+                    <td>{{ key }}</td>
+                    <td>
+                        {% for img in images %}
+                        <input type="checkbox" class="image-checkbox form-check-input" data-key="{{ key }}" data-image="{{ img }}" style="display: none;">
+                        <br>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for img in images %}
+                        <span style="font-size:smaller;">{{ img }}</span><br>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <form action="/delete_images_folder/{{ key }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete the folder /IMAGES/{{ key }} and all its images?');">
+                            <button type="submit" class="btn btn-danger btn-sm mb-1">Delete Folder</button>
+                        </form>
+                        {% if images|length > 0 %}
+                        <div class="dropdown d-inline-block position-relative">
+                            <button class="btn btn-outline-danger btn-sm dropdown-toggle mb-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Delete Image
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% for img in images %}
+                                <li>
+                                    <form action="/delete_image/{{ key }}/{{ img|urlencode }}" method="POST"
+                                          onsubmit="return confirm('Delete image {{ img }} from folder {{ key }}?');"
+                                          style="margin-bottom: 0;">
+                                        <button type="submit" class="dropdown-item text-danger" style="font-size:smaller;">
+                                            {{ img }}
+                                        </button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
 </div>
+
+<!-- Bootstrap JS for dropdowns (in case not already included in your layout.html) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const editButton = document.getElementById("toggleEditMode");
         const deleteUserButton = document.getElementById("deleteSelectedUsers");
         const deleteChatButton = document.getElementById("deleteSelectedChats");
+        const deleteImagesFoldersButton = document.getElementById("deleteSelectedImageFolders");
+        const deleteImagesButton = document.getElementById("deleteSelectedImages");
         let editMode = false;
 
         editButton.addEventListener("click", function () {
@@ -86,31 +164,64 @@
             document.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
                 checkbox.style.display = editMode ? "inline-block" : "none";
             });
-            deleteUserButton.classList.toggle("d-none", !editMode);
-            deleteChatButton.classList.toggle("d-none", !editMode);
+            if(deleteUserButton) deleteUserButton.classList.toggle("d-none", !editMode);
+            if(deleteChatButton) deleteChatButton.classList.toggle("d-none", !editMode);
+            deleteImagesFoldersButton.classList.toggle("d-none", !editMode);
+            deleteImagesButton.classList.toggle("d-none", !editMode);
         });
 
-        deleteUserButton.addEventListener("click", function () {
-            const selectedUsers = [...document.querySelectorAll(".user-checkbox:checked")].map(cb => cb.dataset.username);
-            if (selectedUsers.length > 0 && confirm("Are you sure you want to delete selected users?")) {
-                fetch("/delete_users", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ users: selectedUsers })
-                }).then(() => location.reload());
-            }
-        });
+        if(deleteUserButton){
+            deleteUserButton.addEventListener("click", function () {
+                const selectedUsers = [...document.querySelectorAll(".user-checkbox:checked")].map(cb => cb.dataset.username);
+                if (selectedUsers.length > 0 && confirm("Are you sure you want to delete selected users?")) {
+                    fetch("/delete_users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ users: selectedUsers })
+                    }).then(() => location.reload());
+                }
+            });
+        }
 
-        deleteChatButton.addEventListener("click", function () {
-            const selectedChats = [...document.querySelectorAll(".chat-checkbox:checked")].map(cb => cb.dataset.chatid);
-            if (selectedChats.length > 0 && confirm("Are you sure you want to delete selected chats?")) {
-                fetch("/delete_chats", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ chats: selectedChats })
-                }).then(() => location.reload());
-            }
-        });
+        if(deleteChatButton){
+            deleteChatButton.addEventListener("click", function () {
+                const selectedChats = [...document.querySelectorAll(".chat-checkbox:checked")].map(cb => cb.dataset.chatid);
+                if (selectedChats.length > 0 && confirm("Are you sure you want to delete selected chats?")) {
+                    fetch("/delete_chats", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ chats: selectedChats })
+                    }).then(() => location.reload());
+                }
+            });
+        }
+
+        if(deleteImagesFoldersButton){
+            deleteImagesFoldersButton.addEventListener("click", function () {
+                const selectedKeys = [...document.querySelectorAll(".image-folder-checkbox:checked")].map(cb => cb.dataset.key);
+                if (selectedKeys.length > 0 && confirm("Are you sure you want to delete these /IMAGES folders? This will delete all images in those folders.")) {
+                    fetch("/delete_images_folders", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ keys: selectedKeys })
+                    }).then(() => location.reload());
+                }
+            });
+        }
+
+        if(deleteImagesButton){
+            deleteImagesButton.addEventListener("click", function () {
+                const selectedImages = [...document.querySelectorAll(".image-checkbox:checked")]
+                    .map(cb => ({ key: cb.dataset.key, image: cb.dataset.image }));
+                if (selectedImages.length > 0 && confirm("Are you sure you want to delete the selected images?")) {
+                    fetch("/delete_images", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ images: selectedImages })
+                    }).then(() => location.reload());
+                }
+            });
+        }
 
         document.getElementById("resetMessagesForm").addEventListener("submit", function (event) {
             event.preventDefault();
@@ -134,30 +245,24 @@
         background-color: #f8f9fa;
         color: #343a40;
     }
-
     .table {
         background-color: white;
     }
-
     .table-hover tbody tr:hover {
         background-color: rgba(0, 123, 255, 0.1);
         transition: 0.3s;
     }
-
     .btn-danger:hover, .btn-warning:hover {
         transform: scale(1.05);
         transition: 0.3s ease-in-out;
     }
-
     .card {
         background-color: #ffffff;
         border-radius: 10px;
     }
-
     h2, h3 {
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 </style>
-
 {% endblock %}

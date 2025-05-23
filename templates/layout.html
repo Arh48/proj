@@ -17,7 +17,7 @@
             color: rgb(167, 167, 167);
         }
         body[data-theme='yellow'] {
-            background-color: #f7e58f;
+            background-color: #f0d656;
             color: #333;
         }
     </style>
@@ -41,7 +41,7 @@
                             {% if current_user.is_authenticated and current_user.username == "h" %}
                                 <li class="nav-item"><a class="nav-link" href="/admin">Admin Panel</a></li>
                             {% endif %}
-                            {% if current_user.is_authenticated and current_user.username in ["h", "ct", "bu"] %}
+                            {% if current_user.is_authenticated and current_user.username in ["h", "ct", "bu", "Diimi"] %}
                                 <li class="nav-item"><a class="nav-link" href="/mod">Moderator Panel</a></li>
                             {% endif %}
 
@@ -80,6 +80,28 @@
     {% block main %}{% endblock %}
 
     <script>
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'End') { 
+                // Retrieve the panic URL from the text box in index.html
+                const panicUrl = localStorage.getItem('panicRedirectUrl');
+                if (panicUrl) {
+                    window.open(panicUrl, '_blank');
+                } else {
+                    alert("No panic URL set! Please enter a URL in the text box.");
+                }
+            }
+        });
+
+        // Store panic URL when user enters it
+        document.addEventListener('DOMContentLoaded', function() {
+            const panicInput = document.getElementById('panicUrl');
+            if (panicInput) {
+                panicInput.addEventListener('input', function() {
+                    localStorage.setItem('panicRedirectUrl', panicInput.value);
+                });
+            }
+        });
         document.addEventListener('DOMContentLoaded', function () {
             const themeStylesheet = document.getElementById('themeStylesheet');
             const lightModeToggle = document.getElementById('toggleLightMode');
