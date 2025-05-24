@@ -248,7 +248,7 @@
         const utcDate = new Date(utcTimestamp);
 
         // AEDT is UTC+11, so add 11 hours in milliseconds.
-        const AEDT_OFFSET = 11 * 60 * 60 * 1000;
+        const AEDT_OFFSET = 10 * 60 * 60 * 1000;
         const aedtDate = new Date(utcDate.getTime() + AEDT_OFFSET);
 
         // Format: show "Today at 6:16:25 PM AEDT" if today, else "YYYY-MM-DD HH:mm:ss AEDT"
