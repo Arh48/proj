@@ -10,22 +10,53 @@ body[data-theme='dark'] #navbarBrand img {
 }
 
 /* Message Box */
-.message-box {
+body[data-theme='dark'] .message-box {
     background-color: #292929; /* Sleeker dark gray */
     color: #CFCFCF; /* Softer contrast */
     border: 1px solid #3C3C3C; /* Dark but refined */
 }
 
-/* Received Messages */
-.received {
-    background-color: #252525; /* Deep gray */
+/* All messages: received default */
+body[data-theme='dark'] .discord-message {
+    background-color: #232323; /* Deep gray for received */
     color: #D1D1D1; /* Light gray for readability */
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 2px #0004;
 }
 
-/* Sent Messages */
-.sent {
-    background-color: #1677E5; /* Polished blue */
-    color: #FFFFFF; /* Clear white */
+/* Sent Messages: just a touch lighter than the message box */
+body[data-theme='dark'] .discord-message.sent {
+    background-color: #353840; /* Slightly lighter than .message-box */
+    color: #FAFAFA; /* Very light for strong contrast */
+    border-radius: 10px;
+    outline: none !important;
+    box-shadow: 0 1px 2px #0004;
+}
+
+/* Username coloring */
+body[data-theme='dark'] .discord-username {
+    color: #4EF2F7;
+}
+body[data-theme='dark'] .discord-message.sent .discord-username {
+    color: #f7b24e;
+}
+
+/* Timestamp coloring */
+body[data-theme='dark'] .discord-timestamp {
+    color: #b9bbbe;
+}
+
+/* Message content */
+body[data-theme='dark'] .discord-content {
+    color: #E0E0E0;
+}
+
+/* Chat images */
+body[data-theme='dark'] .chat-image {
+    border: 1px solid #484848;
+    background: #232323;
 }
 
 /* Navbar */
@@ -47,18 +78,53 @@ body[data-theme='dark'] .nav-link:hover {
 /* Buttons */
 body[data-theme='dark'] .btn-primary {
     background-color: #1259B4; /* Deep and polished blue */
+    color: #EAEAEA;
+    border: 1px solid #209CEE;
 }
-
 body[data-theme='dark'] .btn-primary:focus {
     outline: 2px solid #209CEE; /* More refined focus effect */
 }
 
+/* Plus Button */
+body[data-theme='dark'] .plus-btn {
+    background-color: #353840;
+    color: #EAEAEA;
+    border: 1px solid #444;
+}
+body[data-theme='dark'] .plus-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Inputs */
-#messageInput {
+body[data-theme='dark'] #messageInput {
     background-color: #424141ad; /* Balanced darkness */
     color: #EAEAEA; /* Softer text color */
+    border: 1px solid #444444;
 }
-#messages {
+body[data-theme='dark'] #messageInput:focus {
+    outline: 2px solid #209CEE;
+}
+
+body[data-theme='dark'] #messages {
     background-color: #424242ba; /* Balanced darkness */
     color: #EAEAEA; /* Softer text color */
+}
+
+/* Remove blue outline from all chat elements in dark mode */
+body[data-theme='dark'] .discord-message:focus,
+body[data-theme='dark'] .discord-message.sent:focus,
+body[data-theme='dark'] .discord-message.sent:active,
+body[data-theme='dark'] .discord-message.sent:visited,
+body[data-theme='dark'] .btn:focus,
+body[data-theme='dark'] input:focus,
+body[data-theme='dark'] textarea:focus,
+body[data-theme='dark'] select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Modal overlay */
+body[data-theme='dark'] #fullscreenImageModal {
+    background: rgba(0,0,0,0.92);
 }

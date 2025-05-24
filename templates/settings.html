@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block main %}
+<style>
+    .settings-card {
+        border-radius: 18px;
+        background: var(--bs-card-bg, #fff);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.06);
+        padding: 2rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .settings-avatar {
+        border: 4px solid #eee;
+        box-shadow: 0 2px 12px #0001;
+        transition: box-shadow 0.2s;
+        object-fit: cover;
+        background: #f1f1f1;
+    }
+    .settings-avatar:hover {
+        box-shadow: 0 6px 24px #0002;
+    }
+    .settings-nav .nav-link.active {
+        font-weight: 600;
+        background: linear-gradient(90deg, #007bff22 10%, transparent 100%);
+        color: #007bff;
+        border-color: transparent transparent #007bff #007bff;
+    }
+    .settings-tab-pane {
+        min-height: 190px;
+        padding-top: 12px;
+    }
+    .settings-form-label {
+        font-weight: 500;
+        color: #555;
+    }
+    .danger-zone {
+        background: #fff6f5;
+        border: 1px solid #f5c2c7;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    .danger-zone p {
+        color: #be2b2b;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+</style>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-4 text-center mb-4 mb-lg-0">
+            <div class="settings-card">
+                <img src="{{ url_for('static', filename='profile_pics/' ~ (settings.profile_pic if settings.profile_pic else 'default.png')) }}" 
+                     class="rounded-circle mb-3 settings-avatar" width="120" height="120" alt="Profile Picture"
+                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='profile_pics/default.png') }}';">
+                <h4 class="mb-0">{{ user.username }} <span style="font-size:1.5rem">{{ user.emoji }}</span></h4>
+                <div class="text-muted mt-1">Personalize your profile</div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <form method="POST" enctype="multipart/form-data" class="settings-card">
+                <ul class="nav nav-tabs mb-4 settings-nav" id="settingsTabs" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" id="account-tab" data-bs-toggle="tab" href="#account" role="tab"><i class="bi bi-person-circle me-1"></i>Account</a></li>
+                    <li class="nav-item"><a class="nav-link" id="appearance-tab" data-bs-toggle="tab" href="#appearance" role="tab"><i class="bi bi-palette me-1"></i>Appearance</a></li>
+                    <li class="nav-item"><a class="nav-link" id="notifications-tab" data-bs-toggle="tab" href="#notifications" role="tab"><i class="bi bi-bell me-1"></i>Notifications</a></li>
+                    <li class="nav-item"><a class="nav-link" id="security-tab" data-bs-toggle="tab" href="#security" role="tab"><i class="bi bi-shield-lock me-1"></i>Security</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" id="danger-tab" data-bs-toggle="tab" href="#danger" role="tab"><i class="bi bi-exclamation-triangle me-1"></i>Danger Zone</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active settings-tab-pane" id="account" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="profile_pic" class="form-label settings-form-label">Change Profile Picture</label>
+                            <input class="form-control" type="file" id="profile_pic" name="profile_pic" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="change_password" class="form-label settings-form-label">Change Password</label>
+                            <input type="password" class="form-control" name="new_password" id="change_password" autocomplete="new-password" placeholder="New password">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade settings-tab-pane" id="appearance" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="theme" class="form-label settings-form-label">Theme</label>
+                            <select class="form-select" name="theme" id="theme">
+                                <option value="light" {% if settings.theme == "light" %}selected{% endif %}>Light</option>
+                                <option value="dark" {% if settings.theme == "dark" %}selected{% endif %}>Dark</option>
+                                <option value="yellow" {% if settings.theme == "yellow" %}selected{% endif %}>Yellow</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade settings-tab-pane" id="notifications" role="tabpanel">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="notifications" name="notifications" {% if settings.notifications %}checked{% endif %}>
+                            <label class="form-check-label settings-form-label" for="notifications">Enable notifications for group chat messages</label>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade settings-tab-pane" id="security" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="panic_url" class="form-label settings-form-label">Panic Mode URL</label>
+                            <input type="url" class="form-control" id="panic_url" name="panic_url" value="{{ settings.panic_url }}" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade settings-tab-pane" id="danger" role="tabpanel">
+                        <div class="danger-zone">
+                            <p><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone! Delete your account.</p>
+                            <button type="submit" formaction="/delete_account" formmethod="post" class="btn btn-danger w-100">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex mt-4">
+                    <button type="submit" class="btn btn-primary ms-auto px-4 py-2">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#settingsTabs a'))
+    triggerTabList.forEach(function(triggerEl) {
+      var tabTrigger = new bootstrap.Tab(triggerEl)
+      triggerEl.addEventListener('click', function (event) {
+        event.preventDefault()
+        tabTrigger.show()
+      })
+    })
+})
+</script>
+{% endblock %}

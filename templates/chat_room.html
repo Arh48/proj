@@ -1,20 +1,13 @@
 {% extends "layout.html" %}
-
-{% block title %}
-    Chat Room
-{% endblock %}
+{% block title %}Chat Room{% endblock %}
 
 {% block main %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h3 class="mb-0">Group Code: {{ key }}</h3>
     </div>
-
     <div class="chat-window mt-4" style="position: relative;">
-        <div id="messages" class="message-box border rounded p-3">
-            <!-- messages will be inserted here -->
-        </div>
-        <!-- New message indicator (right next to the chat box, plain Bootstrap red exclamation) -->
+        <div id="messages" class="message-box border rounded p-3"></div>
         <button id="newMessageIndicator" title="New messages below"
             style="display:none; position: absolute; right: -52px; bottom: 24px; z-index: 10; background: transparent; border: none; box-shadow: none;">
             <span class="fs-2 text-danger">
@@ -22,7 +15,6 @@
             </span>
         </button>
         <div class="d-flex align-items-center mt-3">
-            <!-- Plus button triggers file input -->
             <button type="button" class="btn btn-success plus-btn mr-2"
                 title="Add Photo"
                 onclick="document.getElementById('imageInput').click();"
@@ -30,23 +22,17 @@
                 <span style="font-size:28px;line-height:0;">&#43;</span>
             </button>
             <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage(event, '{{ key }}')">
-
-            <!-- Chat form -->
             <form id="sendMessageForm" class="flex-grow-1 d-flex" method="POST">
                 <input type="text" name="message" id="messageInput" class="form-control" placeholder="Type message" autocomplete="off">
                 <button class="btn btn-primary ml-2" type="submit">Send</button>
             </form>
         </div>
     </div>
-
-    <!-- Fullscreen image modal -->
     <div id="fullscreenImageModal" style="display:none; position:fixed; z-index:20000; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
         <img id="fullscreenImage" src="" alt="Full size" style="max-width:90vw; max-height:90vh; border-radius:16px; box-shadow:0 2px 32px #222;" />
         <button onclick="closeFullscreenImage()" style="position:absolute; top:32px; right:40px; font-size:2rem; background:transparent; border:none; color:white; z-index:20001;">&times;</button>
     </div>
 </div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <style>
     .message-box {
@@ -59,69 +45,63 @@
         border: 1px solid #ccc;
         padding: 15px;
         border-radius: 10px;
-        background-color: #fff;
+        
     }
-    .message-container {
+    .discord-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 7px;
+        padding-right: 10px;
+    }
+    .discord-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #2f3136;
+        border: 2px solid #23272A;
+        margin-top: 1px;
+    }
+    .discord-bubble {
+        flex: 1 1 0;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        margin-bottom: 10px;
-        position: relative;
     }
-    .timestamp {
-        font-size: 12px;
-        color: gray;
-        margin-bottom: 4px;
-        text-align: center;
-        width: 100%;
-    }
-    .message {
-        max-width: 60%;
-        padding: 10px;
-        border-radius: 15px;
-        word-wrap: break-word;
-        font-size: 16px;
-        display: inline-block;
-    }
-    .sent {
-        background-color: #007bff;
-        color: white;
-        align-self: flex-end;
-        border-bottom-right-radius: 0px;
-    }
-    .received {
-        background-color: #f1f1f1;
-        color: black;
-        align-self: flex-start;
-        border-bottom-left-radius: 0px;
-    }
-    .plus-btn {
-        min-width: 40px;
-        min-height: 40px;
-        max-width: 40px;
-        max-height: 40px;
-        padding: 0;
-        margin-right: 8px;
-        border-radius: 50%;
+    .discord-header {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
+        align-items: baseline;
+        gap: 7px;
     }
-    @media (max-width: 576px) {
-        .plus-btn {
-            width: 36px;
-            height: 36px;
-            font-size: 18px;
-        }
-        #newMessageIndicator {
-            right: -36px !important;
-            bottom: 16px !important;
-        }
+    .discord-username {
+        font-weight: 700;
+        color: #4EF2F7; /* Discord cyanish */
+        font-size: 16px;
+        margin-right: 4px;
+    }
+    .discord-timestamp {
+        color: #b9bbbe;
+        font-size: 13px;
+        font-weight: 400;
+        margin-top: 2px;
+    }
+    .discord-content {
+        color: #dcddde;
+        font-size: 15px;
+        margin-top: 2px;
+        word-break: break-word;
+    }
+    .discord-message.sent .discord-username {
+        color: #f7b24e;
+    }
+    .discord-message.sent {
+        /* Remove blue outline on sent messages */
+        outline: none !important;
+        box-shadow: none !important;
     }
     .chat-image {
-        max-width: 200px;
-        max-height: 200px;
+        max-width: 280px;
+        max-height: 220px;
         border-radius: 10px;
         margin: 5px 0;
         display: block;
@@ -131,8 +111,13 @@
     .chat-image:hover {
         box-shadow: 0 4px 24px #2225;
     }
-    #fullscreenImageModal {
-        display: flex;
+    /* Remove blue outline from interactive elements */
+    button:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none !important;
+        box-shadow: none !important;
     }
 </style>
 
@@ -147,7 +132,6 @@
         return message.id || message._id || JSON.stringify(message);
     }
 
-    // If user is within 40px of the bottom, treat as at bottom (for mobile/touch friendliness)
     function isAtBottom() {
         const threshold = 40;
         return messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
@@ -157,46 +141,19 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    async function fetchMessages(forceScrollBottom = false) {
-        try {
-            const response = await fetch(`/messages/${key}`);
-            const data = await response.json();
-
-            if (response.ok && data.messages) {
-                appendNewMessages(data.messages, forceScrollBottom);
-            } else {
-                console.error("Error fetching messages:", data.error || response.status);
-            }
-        } catch (error) {
-            console.error("Fetch error:", error);
+    function notifyUser(message) {
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "granted") {
+            new Notification("New message from " + message.username, {
+                body: message.message || "Sent an image",
+                icon: "/static/favicon.ico"
+            });
         }
-    }
-
-    function formatDate(timestamp) {
-        const utcDate = new Date(timestamp);
-        const melbourneOffset = (utcDate.getMonth() >= 9 || utcDate.getMonth() <= 2) ? 11 : 10;
-        const melbourneTime = new Date(utcDate.getTime() + melbourneOffset * 60 * 60 * 1000);
-
-        const dayOfWeek = melbourneTime.toLocaleString('en-US', { weekday: 'long' });
-        const month = melbourneTime.toLocaleString('en-US', { month: 'long' });
-        const year = melbourneTime.getFullYear();
-        let day = melbourneTime.getDate();
-        const suffixes = ["th", "st", "nd", "rd"];
-        const v = day % 100;
-        const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
-
-        const hours = melbourneTime.getHours() % 12 || 12;
-        const minutes = melbourneTime.getMinutes().toString().padStart(2, '0');
-        const seconds = melbourneTime.getSeconds().toString().padStart(2, '0');
-        const ampm = melbourneTime.getHours() >= 12 ? 'PM' : 'AM';
-
-        return `${dayOfWeek}, ${month} ${day}${suffix}, ${year} at ${hours}:${minutes}:${seconds} ${ampm}`;
     }
 
     function appendNewMessages(messages, forceScrollBottom = false) {
         const atBottom = isAtBottom();
         const previousScrollHeight = messagesContainer.scrollHeight;
-
         let appended = false;
 
         messages.forEach(message => {
@@ -205,64 +162,132 @@
                 renderedMessageIds.add(msgId);
                 appended = true;
 
-                const messageContainer = document.createElement('div');
-                messageContainer.classList.add('message-container');
+                const isSent = message.username === currentUser;
+                const profilePic = message.profile_pic ? `/static/profile_pics/${message.profile_pic}` : '/static/profile_pics/default.png';
 
-                const timestampElement = document.createElement('div');
-                timestampElement.classList.add('timestamp');
-                timestampElement.textContent = formatDate(message.timestamp);
+                // --- Discord style message row ---
+                const messageRow = document.createElement('div');
+                messageRow.classList.add('discord-message');
+                if (isSent) messageRow.classList.add('sent');
 
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', message.username === currentUser ? 'sent' : 'received');
+                // Avatar
+                const avatar = document.createElement('img');
+                avatar.className = "discord-avatar";
+                avatar.src = profilePic;
+                avatar.alt = "avatar";
+                avatar.onerror = function(){ this.onerror=null; this.src='/static/profile_pics/default.png'; }
 
+                // Message content
+                const bubble = document.createElement('div');
+                bubble.className = "discord-bubble";
+                // Header: Username, Timestamp
+                const header = document.createElement('div');
+                header.className = "discord-header";
+                const username = document.createElement('span');
+                username.className = "discord-username";
+                username.textContent = message.username;
+                const timestamp = document.createElement('span');
+                timestamp.className = "discord-timestamp";
+                timestamp.textContent = formatAEDTTime(message.timestamp);
+                header.appendChild(username);
+                header.appendChild(timestamp);
+
+                // Content
+                const content = document.createElement('div');
+                content.className = "discord-content";
                 if (message.image_url) {
-                    // Add click-to-fullscreen for images
-                    messageElement.innerHTML = `<span class="username">${message.username} ${message.emoji}</span>:<br>
-                        <img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
-                } else {
-                    messageElement.innerHTML = `<span class="username">${message.username} ${message.emoji}</span>: <span class="text">${message.message}</span>`;
+                    content.innerHTML = `<img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
+                }
+                if (message.message) {
+                    if (message.image_url) content.innerHTML += "<br>";
+                    content.innerHTML += message.message;
                 }
 
-                messageContainer.appendChild(timestampElement);
-                messageContainer.appendChild(messageElement);
-                messagesContainer.appendChild(messageContainer);
+                bubble.appendChild(header);
+                bubble.appendChild(content);
+
+                messageRow.appendChild(avatar);
+                messageRow.appendChild(bubble);
+
+                messagesContainer.appendChild(messageRow);
+
+                // Notifications: only for new messages from others, if enabled
+                if (
+                    message.username !== currentUser &&
+                    document.cookie.includes("notifications_enabled=1")
+                ) {
+                    if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(function (permission) {
+                            if (permission === "granted") {
+                                notifyUser(message);
+                            }
+                        });
+                    } else if (Notification.permission === "granted") {
+                        notifyUser(message);
+                    }
+                }
             }
         });
 
-        // Show indicator if new messages arrived and user is not at bottom (and not force scroll)
         if (appended && !atBottom && !forceScrollBottom) {
             newMessageIndicator.style.display = 'block';
         }
 
-        // After DOM updates, scroll if:
-        // - forced (after sending)
-        // - or user was at bottom and new message(s) appended
-        // - or user is within 40px of bottom and new message(s) appended (so small movements near bottom auto-scroll)
         if (forceScrollBottom || (atBottom && appended)) {
             scrollToBottom();
             newMessageIndicator.style.display = 'none';
         } else if (appended) {
-            // If not at bottom, keep their view stable
             const newScrollHeight = messagesContainer.scrollHeight;
             messagesContainer.scrollTop += (newScrollHeight - previousScrollHeight);
         }
     }
 
-    // On page load, clear any prior messages
+    // Convert UTC to AEDT (Australian Eastern Daylight Time, UTC+11)
+    function formatAEDTTime(utcTimestamp) {
+        // The input is an ISO string or UTC timestamp.
+        const utcDate = new Date(utcTimestamp);
+
+        // AEDT is UTC+11, so add 11 hours in milliseconds.
+        const AEDT_OFFSET = 11 * 60 * 60 * 1000;
+        const aedtDate = new Date(utcDate.getTime() + AEDT_OFFSET);
+
+        // Format: show "Today at 6:16:25 PM AEDT" if today, else "YYYY-MM-DD HH:mm:ss AEDT"
+        const nowAEDT = new Date(Date.now() + AEDT_OFFSET);
+
+        let timeString = aedtDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true});
+        if (
+            aedtDate.getDate() === nowAEDT.getDate() &&
+            aedtDate.getMonth() === nowAEDT.getMonth() &&
+            aedtDate.getFullYear() === nowAEDT.getFullYear()
+        ) {
+            return `Today at ${timeString} AEDT`;
+        }
+        const dateString = aedtDate.toLocaleDateString();
+        return `${dateString} ${timeString} AEDT`;
+    }
+
     function clearMessages() {
         messagesContainer.innerHTML = '';
         renderedMessageIds = new Set();
     }
 
-    clearMessages();
+    function fetchMessages(forceScrollBottom = false) {
+        fetch(`/messages/${key}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages) {
+                    appendNewMessages(data.messages, forceScrollBottom);
+                }
+            });
+    }
 
+    clearMessages();
     setInterval(fetchMessages, 3000);
 
     document.getElementById('sendMessageForm').addEventListener('submit', async (event) => {
         event.preventDefault();
         const messageInput = document.getElementById('messageInput');
         if (messageInput.value.trim() === '') return;
-
         try {
             const response = await fetch(`/chat_room/${key}`, {
                 method: 'POST',
@@ -317,20 +342,17 @@
         event.target.value = "";
     }
 
-    // Handle indicator click
     newMessageIndicator.addEventListener('click', function() {
         scrollToBottom();
         this.style.display = 'none';
     });
 
-    // Hide indicator if user scrolls to bottom manually
     messagesContainer.addEventListener('scroll', function() {
         if (isAtBottom()) {
             newMessageIndicator.style.display = 'none';
         }
     });
 
-    // Fullscreen image logic
     function showFullscreenImage(src) {
         const modal = document.getElementById('fullscreenImageModal');
         const img = document.getElementById('fullscreenImage');
@@ -342,7 +364,6 @@
         document.getElementById('fullscreenImageModal').style.display = 'none';
         document.body.style.overflow = '';
     }
-    // Click outside image closes fullscreen
     document.getElementById('fullscreenImageModal').addEventListener('click', function(e) {
         if (e.target === this) closeFullscreenImage();
     });
@@ -359,6 +380,11 @@
     }
 
     setInterval(checkTimeout, 3000);
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    });
+</script>
 {% endblock %}

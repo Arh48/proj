@@ -8,6 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <button id="toggleEditMode" class="btn btn-warning">Edit</button>
         <button id="deleteSelectedUsers" class="btn btn-danger d-none">Delete Selected Users</button>
+        <button id="deleteAllProfilePics" class="btn btn-secondary d-none">Delete All Profile Pics</button>
     </div>
 
     <!-- User Management Table -->
@@ -29,9 +30,10 @@
                     </td>
                     <td>{{ user.username }}</td>
                     <td>
-                        <form action="/delete_user/{{ user.username }}" method="POST">
+                        <form action="/delete_user/{{ user.username }}" method="POST" style="display:inline;">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-1 delete-profile-pic-btn d-none" data-username="{{ user.username }}">Delete Profile Pic</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -157,6 +159,7 @@
         const deleteChatButton = document.getElementById("deleteSelectedChats");
         const deleteImagesFoldersButton = document.getElementById("deleteSelectedImageFolders");
         const deleteImagesButton = document.getElementById("deleteSelectedImages");
+        const deleteAllProfilePicsButton = document.getElementById("deleteAllProfilePics");
         let editMode = false;
 
         editButton.addEventListener("click", function () {
@@ -168,6 +171,12 @@
             if(deleteChatButton) deleteChatButton.classList.toggle("d-none", !editMode);
             deleteImagesFoldersButton.classList.toggle("d-none", !editMode);
             deleteImagesButton.classList.toggle("d-none", !editMode);
+            deleteAllProfilePicsButton.classList.toggle("d-none", !editMode);
+
+            // Show/hide profile pic delete buttons
+            document.querySelectorAll(".delete-profile-pic-btn").forEach(btn => {
+                btn.classList.toggle("d-none", !editMode);
+            });
         });
 
         if(deleteUserButton){
@@ -223,6 +232,48 @@
             });
         }
 
+        if(deleteAllProfilePicsButton){
+            deleteAllProfilePicsButton.addEventListener("click", function () {
+                if (confirm("Are you sure you want to delete all profile pictures? All users will be reset to default.png.")) {
+                    fetch("/delete_all_profile_pics", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("All profile pictures deleted.");
+                            location.reload();
+                        } else {
+                            alert("Failed: " + (data.error || "Unknown error"));
+                        }
+                    });
+                }
+            });
+        }
+
+        // Individual Profile Pic Delete Buttons
+        document.querySelectorAll(".delete-profile-pic-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const username = this.dataset.username;
+                if (confirm(`Delete ${username}'s profile picture?`)) {
+                    fetch(`/delete_profile_pic/${username}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Profile picture deleted.");
+                            location.reload();
+                        } else {
+                            alert("Failed: " + (data.error || "Unknown error"));
+                        }
+                    });
+                }
+            });
+        });
+
         document.getElementById("resetMessagesForm").addEventListener("submit", function (event) {
             event.preventDefault();
             if (confirm("Are you sure? This will delete all chat messages.")) {
@@ -252,7 +303,7 @@
         background-color: rgba(0, 123, 255, 0.1);
         transition: 0.3s;
     }
-    .btn-danger:hover, .btn-warning:hover {
+    .btn-danger:hover, .btn-warning:hover, .btn-secondary:hover {
         transform: scale(1.05);
         transition: 0.3s ease-in-out;
     }

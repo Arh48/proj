@@ -1,67 +1,132 @@
 /* ULTRA-BLINDING YELLOW MODE */
 body[data-theme='yellow-ultra'] {
-    background-color: #FFFF00; /* PURE, unfiltered yellow */
-    color: #000000; /* STRONG contrast */
+    background-color: #FFFF00;
+    color: #000000;
 }
 
 /* Message Box */
-.message-box {
-    background-color: #FFEE00; /* Intense neon-like yellow */
-    color: #000000; /* Deep contrast */
-    border: 3px solid #FFD700; /* GOLDEN border */
+body[data-theme='yellow-ultra'] .message-box {
+    background-color: #FFEE00;
+    color: #000000;
+    border: 3px solid #FFD700;
 }
 
-/* Received Messages */
-.received {
-    background-color: #FFF600; /* Almost fluorescent yellow */
-    color: #000000; /* Crisp contrast */
+/* All messages: received default */
+body[data-theme='yellow-ultra'] .discord-message {
+    background-color: #FFF700;
+    color: #000000; /* <-- BLACK TEXT */
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 2px #bbb6;
 }
 
-/* Sent Messages */
-.sent {
-    background-color: #FFC400; /* Ultra-golden yellow */
-    color: #000000; /* Maximum clarity */
+/* Sent Messages: only slightly darker than received */
+body[data-theme='yellow-ultra'] .discord-message.sent {
+    background-color: #FFE000;
+    color: #000000; /* <-- BLACK TEXT */
+    border-radius: 10px;
+    outline: none !important;
+    box-shadow: 0 1px 2px #bbb6;
 }
 
+/* Username coloring */
+body[data-theme='yellow-ultra'] .discord-username {
+    color: #AA8000;
+}
+body[data-theme='yellow-ultra'] .discord-message.sent .discord-username {
+    color: #FF9900;
+}
 
+/* Timestamp coloring */
+body[data-theme='yellow-ultra'] .discord-timestamp {
+    color: #555500;
+}
 
+/* Message content */
+body[data-theme='yellow-ultra'] .discord-content {
+    color: #000000;
+}
+
+/* Chat images */
+body[data-theme='yellow-ultra'] .chat-image {
+    border: 2px solid #FFD700;
+    background: #FFFDE7;
+}
 
 /* Navbar */
 body[data-theme='yellow-ultra'] .navbar-color {
-    background-color: #000000; /* Overwhelming golden yellow */
-    color: #000000; /* Balanced contrast */
-    border-bottom: 3px solid #FFB300; /* Defined brightness */
+    background-color: #000000;
+    color: #FFD700;
+    border-bottom: 3px solid #FFB300;
 }
 
 /* Navigation Links */
 body[data-theme='yellow-ultra'] .nav-link {
-    color: #111100; /* Dark yellow tint */
+    color: #AA8000;
 }
-
 body[data-theme='yellow-ultra'] .nav-link:hover {
-    color: #000000; /* TOTAL contrast */
+    color: #000000;
 }
 
 /* Buttons */
 body[data-theme='yellow-ultra'] .btn-primary {
-    background-color: #FFFF00; /* PURE highlighter yellow */
-    color: #000000; /* Bold contrast */
+    background-color: #FFFF00;
+    color: #000000;
+    border: 2px solid #FFD700;
+}
+body[data-theme='yellow-ultra'] .btn-primary:focus {
+    outline: 3px solid #FFA700;
 }
 
-body[data-theme='yellow-ultra'] .btn-primary:focus {
-    outline: 3px solid #FFA700; /* STRIKING orange glow */
+/* Plus Button */
+body[data-theme='yellow-ultra'] .plus-btn {
+    background-color: #FFE000;
+    color: #000000;
+    border: 2px solid #FFD700;
+}
+body[data-theme='yellow-ultra'] .plus-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Inputs */
-#messageInput {
-    background-color: #FFF500; /* MAXIMUM brightness */
-    color: #000000; /* Clear readability */
+body[data-theme='yellow-ultra'] #messageInput {
+    background-color: #FFF500;
+    color: #000000;
+    border: 2px solid #FFD700;
 }
 
-#messages {
-    background-color: #FFF200; /* Overpowering radiance */
-    color: #000000; /* Strong contrast */
+body[data-theme='yellow-ultra'] #messageInput:focus {
+    outline: 3px solid #FFA700;
 }
-body {
+
+/* Message box background for #messages */
+body[data-theme='yellow-ultra'] #messages {
+    background-color: #FFF200;
+    color: #000000;
+}
+
+/* Remove blue outlines from all chat elements in yellow mode */
+body[data-theme='yellow-ultra'] .discord-message:focus,
+body[data-theme='yellow-ultra'] .discord-message.sent:focus,
+body[data-theme='yellow-ultra'] .discord-message.sent:active,
+body[data-theme='yellow-ultra'] .discord-message.sent:visited,
+body[data-theme='yellow-ultra'] .btn:focus,
+body[data-theme='yellow-ultra'] input:focus,
+body[data-theme='yellow-ultra'] textarea:focus,
+body[data-theme='yellow-ultra'] select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Modal overlay */
+body[data-theme='yellow-ultra'] #fullscreenImageModal {
+    background: rgba(255,255,0,0.94);
+}
+
+/* Always force body background for this theme */
+body[data-theme='yellow-ultra'],
+body[data-theme='yellow-ultra'] body {
     background-color: #FFFF00 !important;
 }

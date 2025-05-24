@@ -5,53 +5,118 @@ body[data-theme='light'] {
 }
 
 /* Message Box */
-.message-box {
-    background-color: #F5F5F5; /* Soft gray for subtle contrast */
-    color: #222222; /* Strong readability */
-    border: 1px solid #DDDDDD; /* Light border */
+body[data-theme='light'] .message-box {
+    background-color: #F5F5F5;
+    color: #222222;
+    border: 1px solid #DDDDDD;
 }
 
-/* Received Messages */
-.received {
-    background-color: #EFEFEF; /* Gentle gray tone */
-    color: #222222; /* Darker text for clarity */
+/* All messages */
+body[data-theme='light'] .discord-message {
+    background: #F9F9F9; /* Slightly off white for received */
+    color: #232323;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 2px #0001;
 }
 
-/* Sent Messages */
-.sent {
-    background-color: #E0E0E0; /* Soft neutral tone */
-    color: #222222; /* Strong readability */
+/* Sent messages */
+body[data-theme='light'] .discord-message.sent {
+    background: #E7F1FF; /* Soft blue for sent */
+    color: #1A237E;
+    border-radius: 10px;
+    outline: none !important;
+    box-shadow: 0 1px 2px #0001;
+}
+
+/* Remove blue outline from all message states */
+body[data-theme='light'] .discord-message:focus,
+body[data-theme='light'] .discord-message.sent:focus,
+body[data-theme='light'] .discord-message.sent:active,
+body[data-theme='light'] .discord-message.sent:visited,
+body[data-theme='light'] .btn:focus,
+body[data-theme='light'] input:focus,
+body[data-theme='light'] textarea:focus,
+body[data-theme='light'] select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+body[data-theme='light'] .discord-bubble {
+    background: transparent;
+}
+
+/* Username coloring */
+body[data-theme='light'] .discord-username {
+    color: #1976D2;
+}
+body[data-theme='light'] .discord-message.sent .discord-username {
+    color: #B57B1B;
+}
+
+/* Timestamp coloring */
+body[data-theme='light'] .discord-timestamp {
+    color: #888;
+}
+
+/* Message content */
+body[data-theme='light'] .discord-content {
+    color: #232323;
+}
+
+/* Chat images */
+body[data-theme='light'] .chat-image {
+    border: 1px solid #DDD;
+    background: #FFF;
+}
+
+/* Input styling */
+body[data-theme='light'] #messageInput {
+    background-color: #FFF;
+    color: #232323;
+    border: 1px solid #CCCCCC;
+}
+
+body[data-theme='light'] #messageInput:focus {
+    outline: 2px solid #BBBBBB;
+}
+
+/* Button styling */
+body[data-theme='light'] .btn-primary {
+    background-color: #E3E3E3;
+    color: #222222;
+    border: 1px solid #BBBBBB;
+}
+body[data-theme='light'] .btn-primary:focus {
+    outline: 2px solid #BBBBBB;
+}
+body[data-theme='light'] .plus-btn {
+    background-color: #E0E0E0;
+    color: #222222;
+    border: 1px solid #CCCCCC;
+}
+body[data-theme='light'] .plus-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Navbar */
 body[data-theme='light'] .navbar-color {
-    background-color: #F8F8F8; /* Light but distinguished */
-    color: #222222; /* Balanced contrast */
-    border-bottom: 1px solid #CCCCCC; /* Soft definition */
+    background-color: #F8F8F8;
+    color: #222222;
+    border-bottom: 1px solid #CCCCCC;
 }
 
 /* Navigation Links */
 body[data-theme='light'] .nav-link {
-    color: #444444; /* Medium gray for visibility */
+    color: #444444;
 }
-
 body[data-theme='light'] .nav-link:hover {
-    color: #222222; /* Slightly darker on hover */
+    color: #222222;
 }
 
-/* Buttons */
-body[data-theme='light'] .btn-primary {
-    background-color: #DDDDDD; /* Neutral light gray */
-    color: #222222; /* Strong contrast */
+/* Modal */
+body[data-theme='light'] #fullscreenImageModal {
+    background: rgba(255,255,255,0.96);
 }
-
-body[data-theme='light'] .btn-primary:focus {
-    outline: 2px solid #BBBBBB; /* Subtle focus effect */
-}
-
-/* Inputs */
-#messageInput {
-    background-color: #F9F9F9; /* Very light gray */
-    color: #222222; /* Clear text contrast */
-}
-
