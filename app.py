@@ -13,6 +13,7 @@ import shutil as shutil
 from urllib.parse import unquote
 from flask import jsonify, request, redirect, url_for, flash, render_template
 import pickle
+from PIL import Image
 
 SETTINGS_DIR = "settings"
 os.makedirs(SETTINGS_DIR, exist_ok=True)
@@ -489,9 +490,18 @@ def settings():
                         os.remove(old_path)
                     except Exception as e:
                         print(f"Failed to remove old profile picture: {e}")
-            # Save new profile picture
+            # Save new profile picture and resize it
             filename = f"profile_{current_user.id}_{secure_filename(file.filename)}"
-            file.save(os.path.join("static", "profile_pics", filename))
+            filepath = os.path.join("static", "profile_pics", filename)
+            file.save(filepath)
+            # Resize to 100x100 using Pillow
+            try:
+                with Image.open(filepath) as im:
+                    im = im.convert("RGBA") if im.mode in ("P", "RGBA") else im.convert("RGB")
+                    im = im.resize((100, 100), Image.LANCZOS)
+                    im.save(filepath)
+            except Exception as e:
+                print(f"Error resizing profile picture: {e}")
             settings["profile_pic"] = filename
 
         # Theme selection
@@ -519,8 +529,6 @@ def settings():
         resp.set_cookie("notifications_enabled", "1" if settings["notifications"] else "0")
         flash("Settings updated!")
         return resp
-
-    return render_template("settings.html", settings=settings, user=current_user)
 
     return render_template("settings.html", settings=settings, user=current_user)
 

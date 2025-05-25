@@ -2,11 +2,11 @@
 {% block title %}Chat Room{% endblock %}
 
 {% block main %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="container chat-container">
+    <div class="d-flex justify-content-between align-items-center" style="padding: 1rem;">
         <h3 class="mb-0">Group Code: {{ key }}</h3>
     </div>
-    <div class="chat-window mt-4" style="position: relative;">
+    <div class="chat-window" style="position: relative; flex: 1 1 0; display: flex; flex-direction: column; min-height: 0;">
         <div id="messages" class="message-box border rounded p-3"></div>
         <button id="newMessageIndicator" title="New messages below"
             style="display:none; position: absolute; right: -52px; bottom: 24px; z-index: 10; background: transparent; border: none; box-shadow: none;">
@@ -14,7 +14,7 @@
                 <i class="bi bi-exclamation-circle-fill"></i>
             </span>
         </button>
-        <div class="d-flex align-items-center mt-3">
+        <div class="d-flex align-items-center mt-3" style="padding: 0.75rem;">
             <button type="button" class="btn btn-success plus-btn mr-2"
                 title="Add Photo"
                 onclick="document.getElementById('imageInput').click();"
@@ -35,93 +35,148 @@
 </div>
 
 <style>
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent window (page) scrolling */
+}
+
+/* The navbar must have id="main-navbar" for this to work! */
+.chat-container {
+    height: calc(100vh - var(--navbar-height, 56px) - 16px);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    max-width: 100vw;
+    padding-left: 10px; 
+    padding-right: 10px;
+}
+
+.chat-window {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.message-box {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 10px;
+    background: #23272a;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.d-flex.align-items-center.mt-3 {
+    margin-top: 0 !important;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.discord-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 7px;
+    padding-right: 10px;
+}
+.discord-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #2f3136;
+    border: 2px solid #23272A;
+    margin-top: 1px;
+}
+.discord-bubble {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+}
+.discord-header {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+.discord-username {
+    font-weight: 700;
+    color: #4EF2F7;
+    font-size: 16px;
+    margin-right: 4px;
+}
+.discord-timestamp {
+    color: #b9bbbe;
+    font-size: 13px;
+    font-weight: 400;
+    margin-top: 2px;
+}
+.discord-content {
+    color: #dcddde;
+    font-size: 15px;
+    margin-top: 2px;
+    word-break: break-word;
+}
+.discord-message.sent .discord-username {
+    color: #f7b24e;
+}
+.discord-message.sent {
+    outline: none !important;
+    box-shadow: none !important;
+}
+.chat-image {
+    max-width: 280px;
+    max-height: 220px;
+    border-radius: 10px;
+    margin: 5px 0;
+    display: block;
+    cursor: pointer;
+    transition: box-shadow .25s;
+}
+.chat-image:hover {
+    box-shadow: 0 4px 24px #2225;
+}
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 600px) {
+    .chat-container {
+        padding: 0 !important;
+    }
     .message-box {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        height: 300px;
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ccc;
-        padding: 15px;
-        border-radius: 10px;
-        
+        padding: 6px;
     }
-    .discord-message {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 7px;
-        padding-right: 10px;
-    }
-    .discord-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        object-fit: cover;
-        background: #2f3136;
-        border: 2px solid #23272A;
-        margin-top: 1px;
-    }
-    .discord-bubble {
-        flex: 1 1 0;
-        display: flex;
-        flex-direction: column;
-    }
-    .discord-header {
-        display: flex;
-        align-items: baseline;
-        gap: 7px;
-    }
-    .discord-username {
-        font-weight: 700;
-        color: #4EF2F7; /* Discord cyanish */
-        font-size: 16px;
-        margin-right: 4px;
-    }
-    .discord-timestamp {
-        color: #b9bbbe;
-        font-size: 13px;
-        font-weight: 400;
-        margin-top: 2px;
-    }
-    .discord-content {
-        color: #dcddde;
-        font-size: 15px;
-        margin-top: 2px;
-        word-break: break-word;
-    }
-    .discord-message.sent .discord-username {
-        color: #f7b24e;
-    }
-    .discord-message.sent {
-        /* Remove blue outline on sent messages */
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    .chat-image {
-        max-width: 280px;
-        max-height: 220px;
-        border-radius: 10px;
-        margin: 5px 0;
-        display: block;
-        cursor: pointer;
-        transition: box-shadow .25s;
-    }
-    .chat-image:hover {
-        box-shadow: 0 4px 24px #2225;
-    }
-    /* Remove blue outline from interactive elements */
-    button:focus,
-    input:focus,
-    textarea:focus,
-    select:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
+}
 </style>
 
 <script>
+// Dynamically set --navbar-height so chat always fits above any navbar, regardless of device
+function setChatHeight() {
+    const navbar = document.getElementById('main-navbar');
+    if (navbar) {
+        const navbarHeight = navbar.offsetHeight;
+        document.documentElement.style.setProperty('--navbar-height', navbarHeight + 'px');
+    }
+}
+window.addEventListener('resize', setChatHeight);
+window.addEventListener('DOMContentLoaded', setChatHeight);
+
     const key = "{{ key }}";
     const messagesContainer = document.getElementById('messages');
     const newMessageIndicator = document.getElementById('newMessageIndicator');
