@@ -116,6 +116,13 @@ html, body {
     font-size: 16px;
     margin-right: 4px;
 }
+.discord-you {
+    color: #b9bbbe;
+    font-size: 16px;
+    font-weight: 400;
+    margin-right: 4px;
+    font-style: normal;
+}
 .discord-timestamp {
     color: #b9bbbe;
     font-size: 13px;
@@ -235,16 +242,24 @@ window.addEventListener('DOMContentLoaded', setChatHeight);
                 // Message content
                 const bubble = document.createElement('div');
                 bubble.className = "discord-bubble";
-                // Header: Username, Timestamp
+                // Header: Username, (You), Timestamp
                 const header = document.createElement('div');
                 header.className = "discord-header";
                 const username = document.createElement('span');
                 username.className = "discord-username";
                 username.textContent = message.username;
+                header.appendChild(username);
+
+                if (isSent) {
+                    const youSpan = document.createElement('span');
+                    youSpan.className = "discord-you";
+                    youSpan.textContent = "(You)";
+                    header.appendChild(youSpan);
+                }
+
                 const timestamp = document.createElement('span');
                 timestamp.className = "discord-timestamp";
                 timestamp.textContent = formatAEDTTime(message.timestamp);
-                header.appendChild(username);
                 header.appendChild(timestamp);
 
                 // Content
