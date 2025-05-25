@@ -15,7 +15,7 @@
         }
         body[data-theme='dark'] {
             background-color: #212529;
-            color: rgb(167, 167, 167);
+            color: rgb(215, 215, 215);
         }
         body[data-theme='yellow'] {
             background-color: #f0d656;
@@ -84,6 +84,16 @@
             .user-info {
                 margin-bottom: 6px;
             }
+        }
+
+        /* ---- IMPROVED: Make dark mode nav links lighter ---- */
+        body[data-theme='dark'] .navbar-brand,
+        body[data-theme='dark'] .navbar-nav .nav-link {
+            color: #e7e7e7 !important;
+        }
+        body[data-theme='dark'] .navbar-nav .nav-link:hover:not(.active) {
+            color: #f5f5f5 !important;
+            background-color: rgba(37,99,235,0.11);
         }
     </style>
     <script>
