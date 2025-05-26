@@ -213,6 +213,13 @@ window.addEventListener('DOMContentLoaded', setChatHeight);
         }
     }
 
+    // Only consider messages less than 1 minute (60,000 ms) old as "recent"
+    function isMessageRecent(utcTimestamp, minutes = 1) {
+        const messageTime = new Date(utcTimestamp).getTime();
+        const now = Date.now();
+        return (now - messageTime) < minutes * 60 * 1000;
+    }
+
     function appendNewMessages(messages, forceScrollBottom = false) {
         const atBottom = isAtBottom();
         const previousScrollHeight = messagesContainer.scrollHeight;
@@ -281,10 +288,11 @@ window.addEventListener('DOMContentLoaded', setChatHeight);
 
                 messagesContainer.appendChild(messageRow);
 
-                // Notifications: only for new messages from others, if enabled
+                // Notifications: only for new messages from others, if enabled, and message is recent
                 if (
                     message.username !== currentUser &&
-                    document.cookie.includes("notifications_enabled=1")
+                    document.cookie.includes("notifications_enabled=1") &&
+                    isMessageRecent(message.timestamp, 1)
                 ) {
                     if (Notification.permission !== "denied") {
                         Notification.requestPermission().then(function (permission) {
