@@ -182,7 +182,7 @@ def post_message(key):
         msg_data = {
             "username": current_user.username,
             "emoji": current_user.emoji,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now().isoformat() + "Z",
             "profile_pic": profile_pic
         }
         if message:
