@@ -184,285 +184,291 @@ function setChatHeight() {
 window.addEventListener('resize', setChatHeight);
 window.addEventListener('DOMContentLoaded', setChatHeight);
 
-    const key = "{{ key }}";
-    const messagesContainer = document.getElementById('messages');
-    const newMessageIndicator = document.getElementById('newMessageIndicator');
-    const currentUser = "{{ current_user.username }}";
-    let renderedMessageIds = new Set();
+const key = "{{ key }}";
+const messagesContainer = document.getElementById('messages');
+const newMessageIndicator = document.getElementById('newMessageIndicator');
+const currentUser = "{{ current_user.username }}";
+let renderedMessageIds = new Set();
 
-    function getMessageId(message) {
-        return message.id || message._id || JSON.stringify(message);
-    }
+function getMessageId(message) {
+    return message.id || message._id || JSON.stringify(message);
+}
 
-    function isAtBottom() {
-        const threshold = 40;
-        return messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
-    }
+function isAtBottom() {
+    const threshold = 40;
+    return messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
+}
 
-    function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
 
-    function notifyUser(message) {
-        if (!("Notification" in window)) return;
-        if (Notification.permission === "granted") {
-            new Notification("New message from " + message.username, {
-                body: message.message || "Sent an image",
-                icon: "/static/favicon.ico"
-            });
-        }
-    }
-
-    // Only consider messages less than 1 minute (60,000 ms) old as "recent"
-    function isMessageRecent(utcTimestamp, minutes = 1) {
-        const messageTime = new Date(utcTimestamp).getTime();
-        const now = Date.now();
-        return (now - messageTime) < minutes * 60 * 1000;
-    }
-
-    function appendNewMessages(messages, forceScrollBottom = false) {
-        const atBottom = isAtBottom();
-        const previousScrollHeight = messagesContainer.scrollHeight;
-        let appended = false;
-
-        messages.forEach(message => {
-            const msgId = getMessageId(message);
-            if (!renderedMessageIds.has(msgId)) {
-                renderedMessageIds.add(msgId);
-                appended = true;
-
-                const isSent = message.username === currentUser;
-                const profilePic = message.profile_pic ? `/static/profile_pics/${message.profile_pic}` : '/static/profile_pics/default.png';
-
-                // --- Discord style message row ---
-                const messageRow = document.createElement('div');
-                messageRow.classList.add('discord-message');
-                if (isSent) messageRow.classList.add('sent');
-
-                // Avatar
-                const avatar = document.createElement('img');
-                avatar.className = "discord-avatar";
-                avatar.src = profilePic;
-                avatar.alt = "avatar";
-                avatar.onerror = function(){ this.onerror=null; this.src='/static/profile_pics/default.png'; }
-
-                // Message content
-                const bubble = document.createElement('div');
-                bubble.className = "discord-bubble";
-                // Header: Username, (You), Timestamp
-                const header = document.createElement('div');
-                header.className = "discord-header";
-                const username = document.createElement('span');
-                username.className = "discord-username";
-                username.textContent = message.username;
-                header.appendChild(username);
-
-                if (isSent) {
-                    const youSpan = document.createElement('span');
-                    youSpan.className = "discord-you";
-                    youSpan.textContent = "(You)";
-                    header.appendChild(youSpan);
-                }
-
-                const timestamp = document.createElement('span');
-                timestamp.className = "discord-timestamp";
-                timestamp.textContent = formatAEDTTime(message.timestamp);
-                header.appendChild(timestamp);
-
-                // Content
-                const content = document.createElement('div');
-                content.className = "discord-content";
-                if (message.image_url) {
-                    content.innerHTML = `<img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
-                }
-                if (message.message) {
-                    if (message.image_url) content.innerHTML += "<br>";
-                    content.innerHTML += message.message;
-                }
-
-                bubble.appendChild(header);
-                bubble.appendChild(content);
-
-                messageRow.appendChild(avatar);
-                messageRow.appendChild(bubble);
-
-                messagesContainer.appendChild(messageRow);
-
-                // Notifications: only for new messages from others, if enabled, and message is recent
-                if (
-                    message.username !== currentUser &&
-                    document.cookie.includes("notifications_enabled=1") &&
-                    isMessageRecent(message.timestamp, 1)
-                ) {
-                    if (Notification.permission !== "denied") {
-                        Notification.requestPermission().then(function (permission) {
-                            if (permission === "granted") {
-                                notifyUser(message);
-                            }
-                        });
-                    } else if (Notification.permission === "granted") {
-                        notifyUser(message);
-                    }
-                }
-            }
+function notifyUser(message) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        new Notification("New message from " + message.username, {
+            body: message.message || "Sent an image",
+            icon: "/static/favicon.ico"
         });
-
-        if (appended && !atBottom && !forceScrollBottom) {
-            newMessageIndicator.style.display = 'block';
-        }
-
-        if (forceScrollBottom || (atBottom && appended)) {
-            scrollToBottom();
-            newMessageIndicator.style.display = 'none';
-        } else if (appended) {
-            const newScrollHeight = messagesContainer.scrollHeight;
-            messagesContainer.scrollTop += (newScrollHeight - previousScrollHeight);
-        }
     }
+}
 
-    // Convert UTC to AEDT (Australian Eastern Daylight Time, UTC+11)
-    function formatAEDTTime(utcTimestamp) {
-        // The input is an ISO string or UTC timestamp.
-        const utcDate = new Date(utcTimestamp);
-
-        // AEDT is UTC+11, so add 11 hours in milliseconds.
-        const AEDT_OFFSET = 10 * 60 * 60 * 1000;
-        const aedtDate = new Date(utcDate.getTime() + AEDT_OFFSET);
-
-        // Format: show "Today at 6:16:25 PM AEDT" if today, else "YYYY-MM-DD HH:mm:ss AEDT"
-        const nowAEDT = new Date(Date.now() + AEDT_OFFSET);
-
-        let timeString = aedtDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true});
-        if (
-            aedtDate.getDate() === nowAEDT.getDate() &&
-            aedtDate.getMonth() === nowAEDT.getMonth() &&
-            aedtDate.getFullYear() === nowAEDT.getFullYear()
-        ) {
-            return `Today at ${timeString} AEDT`;
-        }
-        const dateString = aedtDate.toLocaleDateString();
-        return `${dateString} ${timeString} AEDT`;
+// Returns true if the message is less than 60 seconds old (in UTC)
+function isMessageRecent(utcTimestamp) {
+    try {
+        const messageDate = new Date(utcTimestamp);
+        const nowUTC = new Date();
+        // Both in ms, so difference in seconds
+        const diffSeconds = (nowUTC - messageDate) / 1000;
+        return diffSeconds >= 0 && diffSeconds < 60;
+    } catch {
+        return false;
     }
+}
 
-    function clearMessages() {
-        messagesContainer.innerHTML = '';
-        renderedMessageIds = new Set();
-    }
+function appendNewMessages(messages, forceScrollBottom = false) {
+    const atBottom = isAtBottom();
+    const previousScrollHeight = messagesContainer.scrollHeight;
+    let appended = false;
 
-    function fetchMessages(forceScrollBottom = false) {
-        fetch(`/messages/${key}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.messages) {
-                    appendNewMessages(data.messages, forceScrollBottom);
-                }
-            });
-    }
+    messages.forEach(message => {
+        const msgId = getMessageId(message);
+        if (!renderedMessageIds.has(msgId)) {
+            renderedMessageIds.add(msgId);
+            appended = true;
 
-    clearMessages();
-    setInterval(fetchMessages, 3000);
+            const isSent = message.username === currentUser;
+            const profilePic = message.profile_pic ? `/static/profile_pics/${message.profile_pic}` : '/static/profile_pics/default.png';
 
-    document.getElementById('sendMessageForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const messageInput = document.getElementById('messageInput');
-        if (messageInput.value.trim() === '') return;
-        try {
-            const response = await fetch(`/chat_room/${key}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: messageInput.value })
-            });
+            // --- Discord style message row ---
+            const messageRow = document.createElement('div');
+            messageRow.classList.add('discord-message');
+            if (isSent) messageRow.classList.add('sent');
 
-            if (response.ok) {
-                messageInput.value = '';
-                fetchMessages(true);
-            } else {
-                const data = await response.json();
-                console.error("Error sending message:", data.error || response.status);
+            // Avatar
+            const avatar = document.createElement('img');
+            avatar.className = "discord-avatar";
+            avatar.src = profilePic;
+            avatar.alt = "avatar";
+            avatar.onerror = function(){ this.onerror=null; this.src='/static/profile_pics/default.png'; }
+
+            // Message content
+            const bubble = document.createElement('div');
+            bubble.className = "discord-bubble";
+            // Header: Username, (You), Timestamp
+            const header = document.createElement('div');
+            header.className = "discord-header";
+            const username = document.createElement('span');
+            username.className = "discord-username";
+            username.textContent = message.username;
+            header.appendChild(username);
+
+            if (isSent) {
+                const youSpan = document.createElement('span');
+                youSpan.className = "discord-you";
+                youSpan.textContent = "(You)";
+                header.appendChild(youSpan);
             }
-        } catch (error) {
-            console.error("Fetch error:", error);
+
+            const timestamp = document.createElement('span');
+            timestamp.className = "discord-timestamp";
+            timestamp.textContent = formatAEDTTime(message.timestamp);
+            header.appendChild(timestamp);
+
+            // Content
+            const content = document.createElement('div');
+            content.className = "discord-content";
+            if (message.image_url) {
+                content.innerHTML = `<img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
+            }
+            if (message.message) {
+                if (message.image_url) content.innerHTML += "<br>";
+                content.innerHTML += message.message;
+            }
+
+            bubble.appendChild(header);
+            bubble.appendChild(content);
+
+            messageRow.appendChild(avatar);
+            messageRow.appendChild(bubble);
+
+            messagesContainer.appendChild(messageRow);
+
+            // Notifications: only for new messages from others, if enabled, and if message is < 1 min old
+            if (
+                message.username !== currentUser &&
+                document.cookie.includes("notifications_enabled=1") &&
+                isMessageRecent(message.timestamp)
+            ) {
+                if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function (permission) {
+                        if (permission === "granted") {
+                            notifyUser(message);
+                        }
+                    });
+                } else if (Notification.permission === "granted") {
+                    notifyUser(message);
+                }
+            }
         }
     });
 
-    function uploadImage(event, groupCode) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('image', file);
+    if (appended && !atBottom && !forceScrollBottom) {
+        newMessageIndicator.style.display = 'block';
+    }
 
-        fetch(`/IMAGES/${groupCode}/`, {
-            method: 'POST',
-            body: formData
-        })
+    if (forceScrollBottom || (atBottom && appended)) {
+        scrollToBottom();
+        newMessageIndicator.style.display = 'none';
+    } else if (appended) {
+        const newScrollHeight = messagesContainer.scrollHeight;
+        messagesContainer.scrollTop += (newScrollHeight - previousScrollHeight);
+    }
+}
+
+// Convert UTC to AEDT (Australian Eastern Daylight Time, UTC+11)
+function formatAEDTTime(utcTimestamp) {
+    // The input is an ISO string or UTC timestamp.
+    const utcDate = new Date(utcTimestamp);
+
+    // AEDT is UTC+11, so add 11 hours in milliseconds.
+    const AEDT_OFFSET = 10 * 60 * 60 * 1000;
+    const aedtDate = new Date(utcDate.getTime() + AEDT_OFFSET);
+
+    // Format: show "Today at 6:16:25 PM AEDT" if today, else "YYYY-MM-DD HH:mm:ss AEDT"
+    const nowAEDT = new Date(Date.now() + AEDT_OFFSET);
+
+    let timeString = aedtDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true});
+    if (
+        aedtDate.getDate() === nowAEDT.getDate() &&
+        aedtDate.getMonth() === nowAEDT.getMonth() &&
+        aedtDate.getFullYear() === nowAEDT.getFullYear()
+    ) {
+        return `Today at ${timeString} AEDT`;
+    }
+    const dateString = aedtDate.toLocaleDateString();
+    return `${dateString} ${timeString} AEDT`;
+}
+
+function clearMessages() {
+    messagesContainer.innerHTML = '';
+    renderedMessageIds = new Set();
+}
+
+function fetchMessages(forceScrollBottom = false) {
+    fetch(`/messages/${key}`)
         .then(response => response.json())
         .then(data => {
-            if (data && data.image_url) {
-                fetch(`/chat_room/${groupCode}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: '',
-                        image_url: data.image_url
-                    })
-                }).then(() => {
-                    fetchMessages(true);
-                });
-            } else {
-                alert('Photo upload failed.');
+            if (data.messages) {
+                appendNewMessages(data.messages, forceScrollBottom);
+            }
+        });
+}
+
+clearMessages();
+setInterval(fetchMessages, 3000);
+
+document.getElementById('sendMessageForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput.value.trim() === '') return;
+    try {
+        const response = await fetch(`/chat_room/${key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: messageInput.value })
+        });
+
+        if (response.ok) {
+            messageInput.value = '';
+            fetchMessages(true);
+        } else {
+            const data = await response.json();
+            console.error("Error sending message:", data.error || response.status);
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+    }
+});
+
+function uploadImage(event, groupCode) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+
+    fetch(`/IMAGES/${groupCode}/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.image_url) {
+            fetch(`/chat_room/${groupCode}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: '',
+                    image_url: data.image_url
+                })
+            }).then(() => {
+                fetchMessages(true);
+            });
+        } else {
+            alert('Photo upload failed.');
+        }
+    })
+    .catch(error => {
+        alert('Photo upload failed.');
+    });
+    event.target.value = "";
+}
+
+newMessageIndicator.addEventListener('click', function() {
+    scrollToBottom();
+    this.style.display = 'none';
+});
+
+messagesContainer.addEventListener('scroll', function() {
+    if (isAtBottom()) {
+        newMessageIndicator.style.display = 'none';
+    }
+});
+
+function showFullscreenImage(src) {
+    const modal = document.getElementById('fullscreenImageModal');
+    const img = document.getElementById('fullscreenImage');
+    img.src = src;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeFullscreenImage() {
+    document.getElementById('fullscreenImageModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.getElementById('fullscreenImageModal').addEventListener('click', function(e) {
+    if (e.target === this) closeFullscreenImage();
+});
+
+function checkTimeout() {
+    fetch("/check_timeout")
+        .then(response => response.json())
+        .then(data => {
+            if (data.timed_out) {
+                window.location.href = "/chat";
             }
         })
-        .catch(error => {
-            alert('Photo upload failed.');
-        });
-        event.target.value = "";
+        .catch(error => console.error("Error checking timeout:", error));
+}
+
+setInterval(checkTimeout, 3000);
+
+document.addEventListener('DOMContentLoaded', function () {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
     }
-
-    newMessageIndicator.addEventListener('click', function() {
-        scrollToBottom();
-        this.style.display = 'none';
-    });
-
-    messagesContainer.addEventListener('scroll', function() {
-        if (isAtBottom()) {
-            newMessageIndicator.style.display = 'none';
-        }
-    });
-
-    function showFullscreenImage(src) {
-        const modal = document.getElementById('fullscreenImageModal');
-        const img = document.getElementById('fullscreenImage');
-        img.src = src;
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-    function closeFullscreenImage() {
-        document.getElementById('fullscreenImageModal').style.display = 'none';
-        document.body.style.overflow = '';
-    }
-    document.getElementById('fullscreenImageModal').addEventListener('click', function(e) {
-        if (e.target === this) closeFullscreenImage();
-    });
-
-    function checkTimeout() {
-        fetch("/check_timeout")
-            .then(response => response.json())
-            .then(data => {
-                if (data.timed_out) {
-                    window.location.href = "/chat";
-                }
-            })
-            .catch(error => console.error("Error checking timeout:", error));
-    }
-
-    setInterval(checkTimeout, 3000);
-
-    document.addEventListener('DOMContentLoaded', function () {
-        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission();
-        }
-    });
+});
 </script>
 {% endblock %}
