@@ -560,6 +560,20 @@ def delete_profile_pic(username):
     return jsonify(success=True)
 
 
+from flask import jsonify, send_file
+
+@app.route('/path/messages.json')
+def serve_messages_json():
+    try:
+        # Option 1: Serve as application/json (recommended)
+        import json
+        with open('messages.json', 'r') as f:
+            data = json.load(f)
+        return jsonify(data)
+        # Option 2: To force a download, use:
+        # return send_file('messages.json', as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     # Ensure IMAGES directory exists
