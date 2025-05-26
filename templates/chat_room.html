@@ -272,7 +272,7 @@ function appendNewMessages(messages, forceScrollBottom = false) {
 
             const timestamp = document.createElement('span');
             timestamp.className = "discord-timestamp";
-            timestamp.textContent = formatAEDTTime(message.timestamp);
+            timestamp.textContent = formatSydneyTime(message.timestamp);
             header.appendChild(timestamp);
 
             // Content
@@ -326,28 +326,16 @@ function appendNewMessages(messages, forceScrollBottom = false) {
     }
 }
 
-// Convert UTC to AEDT (Australian Eastern Daylight Time, UTC+11)
-function formatAEDTTime(utcTimestamp) {
-    // The input is an ISO string or UTC timestamp.
-    const utcDate = new Date(utcTimestamp);
-
-    // AEDT is UTC+11, so add 11 hours in milliseconds.
-    const AEDT_OFFSET = 10 * 60 * 60 * 1000;
-    const aedtDate = new Date(utcDate.getTime() + AEDT_OFFSET);
-
-    // Format: show "Today at 6:16:25 PM AEDT" if today, else "YYYY-MM-DD HH:mm:ss AEDT"
-    const nowAEDT = new Date(Date.now() + AEDT_OFFSET);
-
-    let timeString = aedtDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true});
-    if (
-        aedtDate.getDate() === nowAEDT.getDate() &&
-        aedtDate.getMonth() === nowAEDT.getMonth() &&
-        aedtDate.getFullYear() === nowAEDT.getFullYear()
-    ) {
-        return `Today at ${timeString} AEDT`;
+// Use Luxon to handle Australia/Sydney time zone (AEDT/AEST with DST)
+function formatSydneyTime(utcTimestamp) {
+    const DateTime = luxon.DateTime;
+    const dtSydney = DateTime.fromISO(utcTimestamp, { zone: 'utc' }).setZone('Australia/Sydney');
+    const nowSydney = DateTime.now().setZone('Australia/Sydney');
+    let timeString = dtSydney.toFormat('hh:mm:ss a');
+    if (dtSydney.hasSame(nowSydney, 'day')) {
+        return `Today at ${timeString} ${dtSydney.offsetNameShort}`;
     }
-    const dateString = aedtDate.toLocaleDateString();
-    return `${dateString} ${timeString} AEDT`;
+    return `${dtSydney.toFormat('yyyy-MM-dd')} ${timeString} ${dtSydney.offsetNameShort}`;
 }
 
 function clearMessages() {
