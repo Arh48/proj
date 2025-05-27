@@ -524,20 +524,23 @@ function appendNewMessages(messages, forceScrollBottom = false) {
 
             // Notifications: only for new messages from others, if enabled, and if message is < 1 min old
             if (
-                message.username !== currentUser &&
-                document.cookie.includes("notifications_enabled=1") &&
-                isMessageRecent(message.timestamp)
+            message.username !== currentUser &&
+            isMessageRecent(message.timestamp) &&
+            (
+                message.highlight // Always notify for mentions
+                || document.cookie.includes("notifications_enabled=1") // Or user enabled notifications
+            )
             ) {
-                if (Notification.permission !== "denied") {
-                    Notification.requestPermission().then(function (permission) {
-                        if (permission === "granted") {
-                            notifyUser(message);
-                        }
-                    });
-                } else if (Notification.permission === "granted") {
-                    notifyUser(message);
-                }
+            if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    if (permission === "granted") {
+                        notifyUser(message);
+                    }
+                });
+            } else if (Notification.permission === "granted") {
+                notifyUser(message);
             }
+        }
         }
     });
 
