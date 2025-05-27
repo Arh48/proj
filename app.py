@@ -157,56 +157,78 @@ def get_messages(key):
         return jsonify({"messages": data.get(key, [])})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+import re
+def extract_mentions(text):
+    """Extract @mentions from a message string."""
+    # Matches @username or @everyone, usernames must be word chars or underscores
+    return set(re.findall(r'@(\w+|everyone)', text or ""))
 
 @app.route("/chat_room/<key>", methods=['POST'])
 @login_required
 def post_message(key):
-    import uuid  # <-- Make sure this import is present at the top if not already.
+    import uuid
     message = request.json.get('message', '')
     image_url = request.json.get('image_url', None)
-    reply_to = request.json.get('reply_to', None)  # <-- Accept reply_to from frontend
+    reply_to = request.json.get('reply_to', None)
 
     if not message and not image_url:
         return jsonify({"error": "Message cannot be empty."}), 400
 
     try:
-        # Load previous messages
         with open("messages.json", "r") as file:
             data = json.load(file)
 
         if key not in data:
             data[key] = []
 
-        # Load user's profile picture from settings
         user_settings = load_user_settings(current_user.id)
         profile_pic = user_settings.get("profile_pic") or "default.png"
-
-        # Generate a unique message id for replies
         msg_id = str(uuid.uuid4())
 
+        # Detect mentions
+        mentions = extract_mentions(message)
+        mentioned_users = []
+        highlight = False
+
+        if "everyone" in mentions:
+            highlight = True
+            mentioned_users = [user['username'] for user in db.execute("SELECT username FROM users")]
+        else:
+            for username in mentions:
+                if username == current_user.username:
+                    continue
+                rows = db.execute("SELECT * FROM users WHERE username = ?", username)
+                if rows:
+                    mentioned_users.append(username)
+                    highlight = True
+
         msg_data = {
-            "id": msg_id,  # <-- Unique ID for each message
+            "id": msg_id,
             "username": current_user.username,
             "emoji": current_user.emoji,
             "timestamp": datetime.now().isoformat() + "Z",
-            "profile_pic": profile_pic
+            "profile_pic": profile_pic,
+            "highlight": highlight,  # <<--- THIS IS USED IN THE FRONTEND
+            "mentions": mentioned_users,
         }
         if message:
             msg_data["message"] = message
         if image_url:
             msg_data["image_url"] = image_url
         if reply_to:
-            msg_data["reply_to"] = reply_to  # <-- Save reply_to if present
+            msg_data["reply_to"] = reply_to
 
         data[key].append(msg_data)
 
         with open("messages.json", "w") as file:
             json.dump(data, file)
 
+        # Optionally: Trigger notifications here
         return jsonify({"success": True}), 200
     except Exception as e:
         print(f"Error posting message: {e}")
         return jsonify({"error": str(e)}), 500
+    
 @app.route("/delete_account", methods=["POST"])
 @login_required
 def delete_account():
