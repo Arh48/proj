@@ -49,7 +49,27 @@ html, body {
     padding: 0;
     overflow: hidden; /* Prevent window (page) scrolling */
 }
-
+.mention-highlight-bubble {
+    background: #f9e69b !important;                   /* Discord yellow highlight */
+    border-left: 4px solid #f8d363;                   /* Discord-style border */
+    box-shadow: 0 0 8px #f8d36333;
+    border-radius: 8px;
+    color: #23272a !important;                        /* Discord's readable dark text */
+    transition: background 0.18s, box-shadow 0.18s;
+    position: relative;
+    font-weight: 500;
+}
+.mention-highlight-bubble .discord-content,
+.mention-highlight-bubble .reply-context,
+.mention-highlight-bubble .discord-timestamp,
+.mention-highlight-bubble .discord-username,
+.mention-highlight-bubble .discord-you {
+    color: #23272a !important; /* Ensure all text is readable! */
+}
+.mention-highlight-bubble:hover {
+    background: #fae27a !important;
+    box-shadow: 0 0 16px 2px #f8d36377;
+}
 .chat-container {
     height: calc(100vh - var(--navbar-height, 56px) - 16px);
     display: flex;
@@ -453,6 +473,9 @@ function appendNewMessages(messages, forceScrollBottom = false) {
             // Message content
             const bubble = document.createElement('div');
             bubble.className = "discord-bubble";
+            if (message.highlight) {
+                bubble.classList.add('mention-highlight-bubble');
+            }
             // Header: Username, (You), Timestamp
             const header = document.createElement('div');
             header.className = "discord-header";
