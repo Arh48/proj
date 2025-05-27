@@ -32,7 +32,8 @@
                 <button class="btn btn-primary ml-2" type="submit">Send</button>
             </form>
         </div>
-        <div id="typingIndicator" class="mt-2" style="min-height: 24px; margin-left: 60px; color: #b9bbbe; font-size: 15px;"></div>
+        <!-- Typing indicator is now directly below the input box, less padding above -->
+        <div id="typingIndicator" class="typing-indicator-outer"></div>
     </div>
     <div id="fullscreenImageModal" style="display:none; position:fixed; z-index:20000; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
         <img id="fullscreenImage" src="" alt="Full size" style="max-width:90vw; max-height:90vh; border-radius:16px; box-shadow:0 2px 32px #222;" />
@@ -187,12 +188,51 @@ select:focus {
     box-shadow: none !important;
 }
 
+/* --- Typing indicator styles --- */
+.typing-indicator-outer {
+    min-height: 24px;
+    margin-top: 0px;
+    margin-bottom: 3px;
+    margin-left: 60px;
+    color: #b9bbbe;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 2px;
+    padding-bottom: 1px;
+    /* No extra padding above */
+}
+
+.typing-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 2px;
+    border-radius: 50%;
+    background: #b9bbbe;
+    opacity: 0.45;
+    animation: typing-bounce 1.2s infinite both;
+}
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+    0%, 80%, 100% { opacity: 0.45; transform: translateY(0);}
+    40% { opacity: 1; transform: translateY(-3px);}
+}
+
 @media (max-width: 600px) {
     .chat-container {
         padding: 0 !important;
     }
     .message-box {
         padding: 6px;
+    }
+    .typing-indicator-outer {
+        margin-left: 44px;
+        font-size: 14px;
     }
 }
 </style>
@@ -275,24 +315,31 @@ function fetchTypingUsers() {
         });
 }
 
-// Update typing indicator DOM
-function updateTypingIndicator() {
+// --- Animated Typing Indicator (Discord style 3 dots) ---
+function renderTypingIndicator() {
     const others = typingUsers.filter(u => u !== currentUser);
     if (others.length === 0) {
-        typingIndicator.textContent = "";
+        typingIndicator.innerHTML = "";
         typingIndicator.title = "";
         return;
     }
+    let names = "";
     if (others.length === 1) {
-        typingIndicator.textContent = `${others[0]} is typing...`;
-        typingIndicator.title = others[0];
+        names = `${others[0]} is typing`;
     } else if (others.length === 2) {
-        typingIndicator.textContent = `${others[0]} and ${others[1]} are typing...`;
-        typingIndicator.title = `${others[0]}, ${others[1]}`;
+        names = `${others[0]} and ${others[1]} are typing`;
     } else {
-        typingIndicator.textContent = `${others[0]} and ${others.length - 1} more are typing...`;
-        typingIndicator.title = others.join(", ");
+        names = `${others[0]} and ${others.length - 1} more are typing`;
     }
+    typingIndicator.innerHTML = `<span>${names}</span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>`;
+    typingIndicator.title = others.join(", ");
+}
+
+function updateTypingIndicator() {
+    renderTypingIndicator();
 }
 
 // Setup typing event listeners
