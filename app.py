@@ -161,8 +161,10 @@ def get_messages(key):
 @app.route("/chat_room/<key>", methods=['POST'])
 @login_required
 def post_message(key):
+    import uuid  # <-- Make sure this import is present at the top if not already.
     message = request.json.get('message', '')
     image_url = request.json.get('image_url', None)
+    reply_to = request.json.get('reply_to', None)  # <-- Accept reply_to from frontend
 
     if not message and not image_url:
         return jsonify({"error": "Message cannot be empty."}), 400
@@ -179,7 +181,11 @@ def post_message(key):
         user_settings = load_user_settings(current_user.id)
         profile_pic = user_settings.get("profile_pic") or "default.png"
 
+        # Generate a unique message id for replies
+        msg_id = str(uuid.uuid4())
+
         msg_data = {
+            "id": msg_id,  # <-- Unique ID for each message
             "username": current_user.username,
             "emoji": current_user.emoji,
             "timestamp": datetime.now().isoformat() + "Z",
@@ -189,6 +195,8 @@ def post_message(key):
             msg_data["message"] = message
         if image_url:
             msg_data["image_url"] = image_url
+        if reply_to:
+            msg_data["reply_to"] = reply_to  # <-- Save reply_to if present
 
         data[key].append(msg_data)
 
@@ -574,6 +582,65 @@ def serve_messages_json():
         # return send_file('messages.json', as_attachment=True)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+import os
+import json
+from flask import request, jsonify
+from flask_login import login_required, current_user
+from datetime import datetime, timezone
+
+TYPING_FILE = "typing.json"
+
+def load_typing_data():
+    if not os.path.exists(TYPING_FILE):
+        return {}
+    with open(TYPING_FILE, "r") as f:
+        return json.load(f)
+
+def save_typing_data(data):
+    with open(TYPING_FILE, "w") as f:
+        json.dump(data, f)
+
+@app.route('/typing/<key>', methods=['POST'])
+@login_required
+def typing(key):
+    username = current_user.username
+    now = datetime.now(timezone.utc).isoformat()
+    data = load_typing_data()
+    if key not in data:
+        data[key] = {}
+    data[key][username] = now
+    save_typing_data(data)
+    return jsonify(success=True)
+
+@app.route('/typing_stop/<key>', methods=['POST'])
+@login_required
+def typing_stop(key):
+    username = current_user.username
+    data = load_typing_data()
+    if key in data and username in data[key]:
+        del data[key][username]
+        save_typing_data(data)
+    return jsonify(success=True)
+
+@app.route('/typing_status/<key>')
+@login_required
+def typing_status(key):
+    now = datetime.now(timezone.utc)
+    data = load_typing_data()
+    active_typers = []
+    changed = False
+    if key in data:
+        for username, last_time_str in list(data[key].items()):
+            last_time = datetime.fromisoformat(last_time_str)
+            if (now - last_time).total_seconds() > 3:
+                del data[key][username]
+                changed = True
+            else:
+                active_typers.append(username)
+        if changed:
+            save_typing_data(data)
+    return jsonify(typing=active_typers)
 
 if __name__ == "__main__":
     # Ensure IMAGES directory exists

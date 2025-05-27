@@ -7,6 +7,11 @@
         <h3 class="mb-0">Group Code: {{ key }}</h3>
     </div>
     <div class="chat-window" style="position: relative; flex: 1 1 0; display: flex; flex-direction: column; min-height: 0;">
+        <!-- Reply bar -->
+        <div id="replyBar" style="display:none; background:#222; color:#fff; border-radius:6px 6px 0 0; padding:8px 12px 8px 24px; margin-bottom:-2px; position:relative;">
+            <span id="replyPreview"></span>
+            <button id="cancelReplyBtn" style="position:absolute;right:12px;top:8px;background:transparent;border:none;color:#fff;font-size:18px;">&times;</button>
+        </div>
         <div id="messages" class="message-box border rounded p-3"></div>
         <button id="newMessageIndicator" title="New messages below"
             style="display:none; position: absolute; right: -52px; bottom: 24px; z-index: 10; background: transparent; border: none; box-shadow: none;">
@@ -27,6 +32,7 @@
                 <button class="btn btn-primary ml-2" type="submit">Send</button>
             </form>
         </div>
+        <div id="typingIndicator" class="mt-2" style="min-height: 24px; margin-left: 60px; color: #b9bbbe; font-size: 15px;"></div>
     </div>
     <div id="fullscreenImageModal" style="display:none; position:fixed; z-index:20000; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
         <img id="fullscreenImage" src="" alt="Full size" style="max-width:90vw; max-height:90vh; border-radius:16px; box-shadow:0 2px 32px #222;" />
@@ -43,7 +49,6 @@ html, body {
     overflow: hidden; /* Prevent window (page) scrolling */
 }
 
-/* The navbar must have id="main-navbar" for this to work! */
 .chat-container {
     height: calc(100vh - var(--navbar-height, 56px) - 16px);
     display: flex;
@@ -90,6 +95,9 @@ html, body {
     gap: 12px;
     margin-bottom: 7px;
     padding-right: 10px;
+    cursor: pointer;
+    user-select: text;
+    position: relative;
 }
 .discord-avatar {
     width: 44px;
@@ -154,6 +162,23 @@ html, body {
 .chat-image:hover {
     box-shadow: 0 4px 24px #2225;
 }
+.reply-context {
+    font-size:13px;
+    color:#4EF2F7;
+    background:#2a2d31;
+    border-left:3px solid #4EF2F7;
+    border-radius:4px;
+    padding:3px 8px;
+    margin-bottom:2px;
+    margin-right:2px;
+    margin-top:2px;
+    max-width: 350px;
+    overflow-x: auto;
+    white-space: pre-line;
+}
+.reply-context strong {
+    color: #2ec4b6;
+}
 button:focus,
 input:focus,
 textarea:focus,
@@ -173,7 +198,7 @@ select:focus {
 </style>
 
 <script>
-// Dynamically set --navbar-height so chat always fits above any navbar, regardless of device
+// Luxon for time zone formatting
 function setChatHeight() {
     const navbar = document.getElementById('main-navbar');
     if (navbar) {
@@ -190,8 +215,112 @@ const newMessageIndicator = document.getElementById('newMessageIndicator');
 const currentUser = "{{ current_user.username }}";
 let renderedMessageIds = new Set();
 
+// --- REPLY TO MESSAGE LOGIC ---
+let replyToMessage = null;
+let longPressTimer = null;
+
+function showReplyBar(message) {
+    replyToMessage = message;
+    document.getElementById('replyBar').style.display = 'block';
+    document.getElementById('replyPreview').textContent =
+        `Replying to ${message.username}: "${(message.message ? message.message.slice(0, 64) : '[Image]')}${message.message && message.message.length > 64 ? '...' : ''}"`;
+}
+function hideReplyBar() {
+    replyToMessage = null;
+    document.getElementById('replyBar').style.display = 'none';
+    document.getElementById('replyPreview').textContent = '';
+}
+document.getElementById('cancelReplyBtn').addEventListener('click', hideReplyBar);
+
+// --- TYPING INDICATOR LOGIC ---
+const typingIndicator = document.getElementById('typingIndicator');
+let typing = false;
+let typingTimeout = null;
+let lastTypedTime = 0;
+let typingFetchInterval = null;
+let typingUsers = [];
+
+// Send "typing" event to server (debounced)
+function sendTypingEvent() {
+    if (!typing) {
+        typing = true;
+        fetch(`/typing/${key}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username: currentUser })
+        });
+    }
+    lastTypedTime = Date.now();
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(stopTyping, 2500);
+}
+
+// Stop typing event
+function stopTyping() {
+    typing = false;
+    fetch(`/typing_stop/${key}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: currentUser })
+    });
+}
+
+// Poll server for typing users
+function fetchTypingUsers() {
+    fetch(`/typing_status/${key}`)
+        .then(response => response.json())
+        .then(data => {
+            typingUsers = data.typing || [];
+            updateTypingIndicator();
+        });
+}
+
+// Update typing indicator DOM
+function updateTypingIndicator() {
+    const others = typingUsers.filter(u => u !== currentUser);
+    if (others.length === 0) {
+        typingIndicator.textContent = "";
+        typingIndicator.title = "";
+        return;
+    }
+    if (others.length === 1) {
+        typingIndicator.textContent = `${others[0]} is typing...`;
+        typingIndicator.title = others[0];
+    } else if (others.length === 2) {
+        typingIndicator.textContent = `${others[0]} and ${others[1]} are typing...`;
+        typingIndicator.title = `${others[0]}, ${others[1]}`;
+    } else {
+        typingIndicator.textContent = `${others[0]} and ${others.length - 1} more are typing...`;
+        typingIndicator.title = others.join(", ");
+    }
+}
+
+// Setup typing event listeners
+const messageInput = document.getElementById('messageInput');
+messageInput.addEventListener('input', function(e) {
+    if (messageInput.value) {
+        sendTypingEvent();
+    } else {
+        stopTyping();
+    }
+});
+messageInput.addEventListener('blur', function() {
+    stopTyping();
+});
+
+// Poll for typing status every 1s
+typingFetchInterval = setInterval(fetchTypingUsers, 1000);
+
+// Clean up typing state when leaving page
+window.addEventListener('beforeunload', function() {
+    stopTyping();
+    clearInterval(typingFetchInterval);
+});
+
+// --- END TYPING INDICATOR LOGIC ---
+
 function getMessageId(message) {
-    return message.id || message._id || JSON.stringify(message);
+    return message.id || message._id || JSON.stringify([message.timestamp, message.username, message.message, message.image_url]);
 }
 
 function isAtBottom() {
@@ -232,7 +361,11 @@ function appendNewMessages(messages, forceScrollBottom = false) {
     let appended = false;
 
     messages.forEach(message => {
-        const msgId = getMessageId(message);
+        // Ensure message has an id (for replies)
+        if (!message.id) {
+            message.id = getMessageId(message);
+        }
+        const msgId = message.id;
         if (!renderedMessageIds.has(msgId)) {
             renderedMessageIds.add(msgId);
             appended = true;
@@ -244,6 +377,24 @@ function appendNewMessages(messages, forceScrollBottom = false) {
             const messageRow = document.createElement('div');
             messageRow.classList.add('discord-message');
             if (isSent) messageRow.classList.add('sent');
+
+            // For reply actions
+            messageRow.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showReplyBar(message);
+            });
+            // Touch long-press
+            messageRow.addEventListener('touchstart', function(e) {
+                longPressTimer = setTimeout(() => {
+                    showReplyBar(message);
+                }, 450);
+            });
+            messageRow.addEventListener('touchend', function(e) {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
+            messageRow.addEventListener('touchmove', function(e) {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
 
             // Avatar
             const avatar = document.createElement('img');
@@ -278,8 +429,15 @@ function appendNewMessages(messages, forceScrollBottom = false) {
             // Content
             const content = document.createElement('div');
             content.className = "discord-content";
+            // Show reply context if present
+            if (message.reply_to) {
+                const replyDiv = document.createElement('div');
+                replyDiv.className = "reply-context";
+                replyDiv.innerHTML = `<strong>${message.reply_to.username}</strong>: <span style="color:#b9bbbe">${message.reply_to.preview ? message.reply_to.preview : '[Image]'}</span>`;
+                content.appendChild(replyDiv);
+            }
             if (message.image_url) {
-                content.innerHTML = `<img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
+                content.innerHTML += `<img src="${message.image_url}" class="chat-image" alt="sent image" onclick="showFullscreenImage('${message.image_url.replace(/'/g, "\\'")}')">`;
             }
             if (message.message) {
                 if (message.image_url) content.innerHTML += "<br>";
@@ -360,17 +518,26 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (eve
     event.preventDefault();
     const messageInput = document.getElementById('messageInput');
     if (messageInput.value.trim() === '') return;
+    const bodyData = { message: messageInput.value };
+    if (replyToMessage && replyToMessage.id) {
+        bodyData.reply_to = {
+            id: replyToMessage.id,
+            username: replyToMessage.username,
+            preview: replyToMessage.message ? replyToMessage.message.slice(0, 64) : '[Image]'
+        };
+    }
     try {
         const response = await fetch(`/chat_room/${key}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message: messageInput.value })
+            body: JSON.stringify(bodyData)
         });
 
         if (response.ok) {
             messageInput.value = '';
+            hideReplyBar();
             fetchMessages(true);
         } else {
             const data = await response.json();
@@ -399,9 +566,17 @@ function uploadImage(event, groupCode) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: '',
-                    image_url: data.image_url
+                    image_url: data.image_url,
+                    ...(replyToMessage && replyToMessage.id ? {
+                        reply_to: {
+                            id: replyToMessage.id,
+                            username: replyToMessage.username,
+                            preview: replyToMessage.message ? replyToMessage.message.slice(0, 64) : '[Image]'
+                        }
+                    } : {})
                 })
             }).then(() => {
+                hideReplyBar();
                 fetchMessages(true);
             });
         } else {
