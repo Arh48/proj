@@ -22,9 +22,15 @@
                      AND PRESS 'End' ON KEYBOARD TO EVADE THE AUTHORITIES</li>
         </ul>
     </div>
-
-       
 </div>
+
+<!-- Inverted sticky footer navbar -->
+<nav class="navbar navbar-inverted fixed-bottom justify-content-center py-2">
+    <span>
+        By using Education Perfected you are agreeing to the 
+        <a href="/terms" target="_blank">terms</a>
+    </span>
+</nav>
 
 <style>
     .animated {
@@ -43,6 +49,14 @@
             opacity: 1;
             transform: translateY(0);
         }
+    }
+    .navbar-inverted {
+        background-color: #222;
+        color: #fff;
+    }
+    .navbar-inverted a {
+        color: #80bdff;
+        text-decoration: underline;
     }
 </style>
 {% endblock %}
