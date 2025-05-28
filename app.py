@@ -664,6 +664,10 @@ def typing_status(key):
             save_typing_data(data)
     return jsonify(typing=active_typers)
 
+@app.route('/terms')
+def terms_and_conditions():
+    return render_template('policy.html')
+
 if __name__ == "__main__":
     # Ensure IMAGES directory exists
     if not os.path.exists(UPLOAD_BASE):
