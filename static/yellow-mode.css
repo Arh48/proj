@@ -130,3 +130,6 @@ body[data-theme='yellow-ultra'],
 body[data-theme='yellow-ultra'] body {
     background-color: #FFFF00 !important;
 }
+.navbar-inverted {
+    color: #212529 !important;
+}

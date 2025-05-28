@@ -120,3 +120,23 @@ body[data-theme='light'] .nav-link:hover {
 body[data-theme='light'] #fullscreenImageModal {
     background: rgba(255,255,255,0.96);
 }
+.navbar-inverted {
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #212529 !important;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.07);
+    border-top: 1px solid #dee2e6;
+    width: 100vw;
+    left: 0;
+    bottom: 0;
+    z-index: 1030;
+    position: fixed;
+    transition: background 0.5s, color 0.3s;
+}
+.navbar-inverted a {
+    color: #007bff !important;
+    text-decoration: underline;
+    transition: color 0.3s;
+}
+.navbar-inverted a:hover {
+    color: #0056b3 !important;
+}
