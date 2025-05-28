@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-<div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 100vh;">
+<div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 100vh; overflow: hidden;">
     <div class="text-center mb-4 animated fadeIn">
         <h1 class="display-4">You are logged in</h1>
         <h2 class="h3">Welcome to Education Perfected!</h2>
@@ -24,8 +24,8 @@
     </div>
 </div>
 
-<!-- Inverted sticky footer navbar -->
-<nav class="navbar navbar-inverted fixed-bottom justify-content-center py-2">
+<!-- Real inverted sticky/dynamic footer navbar -->
+<nav id="dynamic-inverted-navbar" class="navbar navbar-inverted fixed-bottom justify-content-center py-2">
     <span>
         By using Education Perfected you are agreeing to the 
         <a href="/terms" target="_blank">terms</a>
@@ -33,6 +33,16 @@
 </nav>
 
 <style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Disable scrolling */
+    }
+    body > .d-flex {
+        height: 100vh;
+        overflow: hidden;
+    }
     .animated {
         animation-duration: 0.8s;
         animation-fill-mode: both;
@@ -51,12 +61,47 @@
         }
     }
     .navbar-inverted {
-        background-color: #222;
+        background: linear-gradient(90deg, #222 0%, #333 100%);
         color: #fff;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.25);
+        border-top: 1px solid #444;
+        width: 100vw;
+        left: 0;
+        bottom: 0;
+        z-index: 1030;
+        position: fixed;
+        transition: background 0.5s;
     }
     .navbar-inverted a {
         color: #80bdff;
         text-decoration: underline;
+        transition: color 0.3s;
+    }
+    .navbar-inverted a:hover {
+        color: #f8f9fa;
+    }
+    @media (max-width: 576px) {
+        .navbar-inverted span {
+            font-size: 0.95em;
+        }
     }
 </style>
+<script>
+    // Make navbar dynamic based on user activity (dimming on idle, restore on move)
+    let navbar = document.getElementById('dynamic-inverted-navbar');
+    let idleTimeout;
+    function setNavbarDim(dim) {
+        navbar.style.opacity = dim ? '0.45' : '1';
+        navbar.style.pointerEvents = dim ? 'none' : 'auto';
+    }
+    function resetNavbarIdle() {
+        setNavbarDim(false);
+        if (idleTimeout) clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(() => setNavbarDim(true), 3500);
+    }
+    window.addEventListener('mousemove', resetNavbarIdle);
+    window.addEventListener('keydown', resetNavbarIdle);
+    // Start dimming after initial load
+    setTimeout(() => setNavbarDim(true), 3500);
+</script>
 {% endblock %}
