@@ -4,6 +4,13 @@
 <div class="container mt-4">
     <h2 class="text-center fw-bold mt-3">Admin Control Panel</h2>
     
+    <!-- Go to File Explorer Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ url_for('files') }}" class="btn btn-outline-primary">
+            <i class="fa fa-hdd"></i> File Explorer
+        </a>
+    </div>
+
     <!-- Edit Mode Controls -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <button id="toggleEditMode" class="btn btn-warning">Edit</button>

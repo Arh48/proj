@@ -106,9 +106,63 @@ body[data-theme='dark'] #messageInput:focus {
     outline: 2px solid #209CEE;
 }
 
+/* Messages container */
 body[data-theme='dark'] #messages {
     background-color: #424242ba; /* Balanced darkness */
     color: #EAEAEA; /* Softer text color */
+}
+
+/* Mention highlight bubble for dark mode */
+body[data-theme='dark'] .mention-highlight-bubble {
+    background: #121a28 !important;                  /* Even deeper blue, easy on dark backgrounds */
+    border-left: 4px solid #284080 !important;       /* Muted blue border for accent */
+    box-shadow: 0 1px 8px #0039b466 !important;
+    border-radius: 8px !important;
+    color: #eaf1fb !important;                       /* Soft, light text for dark mode */
+    transition: background 0.18s, box-shadow 0.18s !important;
+    position: relative !important;
+    font-weight: 500 !important;
+}
+body[data-theme='dark'] .mention-highlight-bubble .discord-content,
+body[data-theme='dark'] .mention-highlight-bubble .reply-context,
+body[data-theme='dark'] .mention-highlight-bubble .discord-timestamp,
+body[data-theme='dark'] .mention-highlight-bubble .discord-username,
+body[data-theme='dark'] .mention-highlight-bubble .discord-you {
+    color: #eaf1fb !important; /* Ensure all text is readable on dark backgrounds */
+}
+body[data-theme='dark'] .mention-highlight-bubble:hover {
+    background: #00217d !important;                  /* Subtle highlight for hover on dark mode */
+    box-shadow: 0 2px 16px 2px #0041f677 !important;
+}
+
+/* Mention highlight bubble for light mode (when dark mode is not active) */
+body:not([data-theme='dark']) .mention-highlight-bubble,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) {
+    background: #f9e69b !important;                   /* Discord yellow highlight */
+    border-left: 4px solid #f8d363 !important;        /* Discord-style border */
+    box-shadow: 0 0 8px #f8d36333;
+    border-radius: 8px;
+    color: #004172 !important;                        /* Discord's readable dark text */
+    transition: background 0.18s, box-shadow 0.18s;
+    position: relative;
+    font-weight: 500;
+}
+body:not([data-theme='dark']) .mention-highlight-bubble .discord-content,
+body:not([data-theme='dark']) .mention-highlight-bubble .reply-context,
+body:not([data-theme='dark']) .mention-highlight-bubble .discord-timestamp,
+body:not([data-theme='dark']) .mention-highlight-bubble .discord-username,
+body:not([data-theme='dark']) .mention-highlight-bubble .discord-you,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) .discord-content,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) .reply-context,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) .discord-timestamp,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) .discord-username,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble) .discord-you {
+    color: #23272a !important; /* Ensure all text is readable! */
+}
+body:not([data-theme='dark']) .mention-highlight-bubble:hover,
+.mention-highlight-bubble:not(body[data-theme='dark'] .mention-highlight-bubble):hover {
+    background: #fae27a !important;
+    box-shadow: 0 0 16px 2px #f8d36377;
 }
 
 /* Remove blue outline from all chat elements in dark mode */

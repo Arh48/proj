@@ -14,7 +14,11 @@ from urllib.parse import unquote
 from flask import jsonify, request, redirect, url_for, flash, render_template
 import pickle
 from PIL import Image
-
+from flask import send_from_directory, abort, request, send_file
+import io
+import zipfile
+import os
+import mimetypes
 SETTINGS_DIR = "settings"
 os.makedirs(SETTINGS_DIR, exist_ok=True)
 os.makedirs(os.path.join("static", "profile_pics"), exist_ok=True)
@@ -405,8 +409,7 @@ timeouts = {}
 @app.route("/mod", methods=["GET", "POST"])
 @login_required
 def mod_panel():
-    # Normalize username (strip spaces, lowercase) for the check
-    if current_user.username.strip().lower() not in ["h", "Diimi", "bu", "ct"]:
+    if current_user.username.strip() not in ["h", "Diimi", "bu", "ct"]:
         flash("Access denied: Moderator privileges required.")
         return redirect(url_for("index"))
 
@@ -592,19 +595,7 @@ def delete_profile_pic(username):
 
 from flask import jsonify, send_file
 
-@app.route('/path/messages.json')
-def serve_messages_json():
-    try:
-        # Option 1: Serve as application/json (recommended)
-        import json
-        with open('messages.json', 'r') as f:
-            data = json.load(f)
-        return jsonify(data)
-        # Option 2: To force a download, use:
-        # return send_file('messages.json', as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+
 import os
 import json
 from flask import request, jsonify
@@ -668,6 +659,109 @@ def typing_status(key):
 def terms_and_conditions():
     return render_template('policy.html')
 
+def is_path_safe(base, target):
+    # Prevent directory traversal
+    return os.path.abspath(target).startswith(os.path.abspath(base))
+
+@app.route('/files', defaults={'req_path': ''})
+@app.route('/files/<path:req_path>')
+@login_required
+def files(req_path):
+    if current_user.username != "h":
+        abort(403)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # <-- HERE
+    abs_path = os.path.join(BASE_DIR, req_path)
+    abs_path = os.path.abspath(abs_path)
+    # Security check
+    if not is_path_safe(BASE_DIR, abs_path):
+        abort(403)
+    if not os.path.exists(abs_path):
+        return render_template("file_explorer.html", files=[], folders=[], parent="", current=req_path, error="Path does not exist.")
+    if os.path.isfile(abs_path):
+        # Download file
+        return send_file(abs_path, as_attachment=True)
+    # Directory: list files and folders
+    items = os.listdir(abs_path)
+    files = []
+    folders = []
+    for item in items:
+        item_path = os.path.join(abs_path, item)
+        if os.path.isdir(item_path):
+            folders.append(item)
+        else:
+            files.append(item)
+    parent = os.path.dirname(req_path)
+    return render_template("file_explorer.html", files=files, folders=folders, parent=parent, current=req_path, error=None)
+
+@app.route('/files_download/<path:req_path>')
+@login_required
+def files_download(req_path):
+    if current_user.username != "h":
+        abort(403)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # <-- HERE
+    abs_path = os.path.join(BASE_DIR, req_path)
+    abs_path = os.path.abspath(abs_path)
+    if not is_path_safe(BASE_DIR, abs_path):
+        abort(403)
+    if not os.path.exists(abs_path):
+        abort(404)
+    if os.path.isfile(abs_path):
+        return send_file(abs_path, as_attachment=True)
+    # If it's a directory, zip and send
+    zip_io = io.BytesIO()
+    with zipfile.ZipFile(zip_io, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(abs_path):
+            for file in files:
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, abs_path)
+                zf.write(full_path, arcname=rel_path)
+    zip_io.seek(0)
+    return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=os.path.basename(abs_path) + ".zip")
+@app.route('/files_view/<path:req_path>')
+@login_required
+def files_view(req_path):
+    if current_user.username != "h":
+        abort(403)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    abs_path = os.path.abspath(os.path.join(BASE_DIR, req_path))
+    if not abs_path.startswith(BASE_DIR) or not os.path.isfile(abs_path):
+        abort(404)
+
+    # Get mimetype
+    mimetype, _ = mimetypes.guess_type(abs_path)
+    is_text = mimetype and mimetype.startswith("text")
+    is_image = mimetype and mimetype.startswith("image")
+
+    # Only allow small files to prevent huge loads
+    if os.path.getsize(abs_path) > 5 * 1024 * 1024:  # 5MB
+        return render_template("file_viewer.html", filename=req_path, error="File too large to display.", content=None, is_text=False, is_image=False, image_url=None)
+
+    if is_text:
+        try:
+            with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+        except Exception as e:
+            return render_template("file_viewer.html", filename=req_path, error="Could not read file: " + str(e), content=None, is_text=False, is_image=False, image_url=None)
+        return render_template("file_viewer.html", filename=req_path, content=content, error=None, is_text=True, is_image=False, image_url=None)
+
+    if is_image:
+        # Serve the image via a direct URL
+        rel_path = os.path.relpath(abs_path, BASE_DIR)
+        image_url = url_for('files_view_image', req_path=rel_path)
+        return render_template("file_viewer.html", filename=req_path, content=None, error=None, is_text=False, is_image=True, image_url=image_url)
+
+    return render_template("file_viewer.html", filename=req_path, content=None, error="This file type cannot be displayed.", is_text=False, is_image=False, image_url=None)
+
+@app.route('/files_image/<path:req_path>')
+@login_required
+def files_view_image(req_path):
+    if current_user.username != "h":
+        abort(403)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    abs_path = os.path.abspath(os.path.join(BASE_DIR, req_path))
+    if not abs_path.startswith(BASE_DIR) or not os.path.isfile(abs_path):
+        abort(404)
+    return send_file(abs_path)
 if __name__ == "__main__":
     # Ensure IMAGES directory exists
     if not os.path.exists(UPLOAD_BASE):

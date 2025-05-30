@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Viewing {{ filename }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    pre {
+      background: #f8fafc;
+      padding: 1em;
+      border-radius: 8px;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      font-size: 1em;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .img-preview {
+      max-width: 100%;
+      max-height: 70vh;
+      display: block;
+      margin: 0 auto 1em auto;
+      box-shadow: 0 2px 12px #0002;
+      border-radius: 8px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <h4 class="mb-3">File: <code>{{ filename }}</code></h4>
+  <a href="{{ url_for('files', req_path='/'.join(filename.split('/')[:-1])) }}" class="btn btn-secondary btn-sm mb-3">
+    ← Back to Explorer
+  </a>
+  <a href="{{ url_for('files_download', req_path=filename) }}" class="btn btn-primary btn-sm mb-3">
+    <i class="fa fa-download"></i> Download
+  </a>
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% elif is_text %}
+    <pre>{{ content }}</pre>
+  {% elif is_image %}
+    <img src="{{ image_url }}" class="img-preview" alt="Image Preview">
+  {% else %}
+    <div class="alert alert-warning">This file cannot be displayed (binary or unknown type). <a href="{{ url_for('files_download', req_path=filename) }}">Download instead.</a></div>
+  {% endif %}
+</div>
+</body>
+</html>

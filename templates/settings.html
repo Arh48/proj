@@ -59,13 +59,13 @@
             </div>
         </div>
         <div class="col-lg-7">
+            <!-- Main settings form -->
             <form method="POST" enctype="multipart/form-data" class="settings-card">
                 <ul class="nav nav-tabs mb-4 settings-nav" id="settingsTabs" role="tablist">
                     <li class="nav-item"><a class="nav-link active" id="account-tab" data-bs-toggle="tab" href="#account" role="tab"><i class="bi bi-person-circle me-1"></i>Account</a></li>
                     <li class="nav-item"><a class="nav-link" id="appearance-tab" data-bs-toggle="tab" href="#appearance" role="tab"><i class="bi bi-palette me-1"></i>Appearance</a></li>
                     <li class="nav-item"><a class="nav-link" id="notifications-tab" data-bs-toggle="tab" href="#notifications" role="tab"><i class="bi bi-bell me-1"></i>Notifications</a></li>
                     <li class="nav-item"><a class="nav-link" id="security-tab" data-bs-toggle="tab" href="#security" role="tab"><i class="bi bi-shield-lock me-1"></i>Security</a></li>
-                    <li class="nav-item"><a class="nav-link text-danger" id="danger-tab" data-bs-toggle="tab" href="#danger" role="tab"><i class="bi bi-exclamation-triangle me-1"></i>Danger Zone</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active settings-tab-pane" id="account" role="tabpanel">
@@ -100,15 +100,18 @@
                             <input type="url" class="form-control" id="panic_url" name="panic_url" value="{{ settings.panic_url }}" placeholder="https://example.com">
                         </div>
                     </div>
-                    <div class="tab-pane fade settings-tab-pane" id="danger" role="tabpanel">
-                        <div class="danger-zone">
-                            <p><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone! Delete your account.</p>
-                            <button type="submit" formaction="/delete_account" formmethod="post" class="btn btn-danger w-100">Delete Account</button>
-                        </div>
-                    </div>
                 </div>
                 <div class="d-flex mt-4">
                     <button type="submit" class="btn btn-primary ms-auto px-4 py-2">Save Changes</button>
+                </div>
+            </form>
+
+            <!-- Danger Zone as a SEPARATE form to prevent accidental deletion on Enter -->
+            <form action="/delete_account" method="post"
+                  onsubmit="return confirm('Are you sure you want to delete your account? This cannot be undone.');">
+                <div class="danger-zone mt-4">
+                    <p><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone! Delete your account.</p>
+                    <button type="submit" class="btn btn-danger w-100">Delete Account</button>
                 </div>
             </form>
         </div>
@@ -123,7 +126,22 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault()
         tabTrigger.show()
       })
-    })
-})
+    });
+
+    // --- PANIC URL SYNC CODE ---
+    // Sync the backend value to localStorage, so the panic hotkey always works!
+    var panicUrl = "{{ settings.panic_url|default('')|e }}";
+    if (panicUrl) {
+        localStorage.setItem('panicRedirectUrl', panicUrl);
+    }
+    // Also, ensure the input field is kept in sync for live changes
+    const panicInput = document.getElementById('panic_url');
+    if (panicInput) {
+        panicInput.value = panicUrl;
+        panicInput.addEventListener('input', function() {
+            localStorage.setItem('panicRedirectUrl', panicInput.value);
+        });
+    }
+});
 </script>
 {% endblock %}
