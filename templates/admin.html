@@ -3,7 +3,36 @@
 {% block main %}
 <div class="container mt-4">
     <h2 class="text-center fw-bold mt-3">Admin Control Panel</h2>
-    
+
+    <!-- Storage Usage Slider -->
+    <div class="card p-3 shadow-sm bg-light mb-4">
+      <h5 class="mb-2">
+        Root Directory Usage
+        <span class="float-end">
+          {% if root_size >= 1024**3 %}
+            {{ (root_size / (1024**3))|round(3) }} GB ({{ root_size|int }} bytes)
+          {% elif root_size >= 1024**2 %}
+            {{ (root_size / (1024**2))|round(2) }} MB ({{ root_size|int }} bytes)
+          {% elif root_size >= 1024 %}
+            {{ (root_size / 1024)|round(1) }} KB ({{ root_size|int }} bytes)
+          {% else %}
+            {{ root_size|int }} bytes
+          {% endif %}
+          / 1 GB
+        </span>
+      </h5>
+      <div class="progress" style="height: 28px;">
+        <div class="progress-bar {% if percent_used < 70 %}bg-success{% elif percent_used < 90 %}bg-warning{% else %}bg-danger{% endif %}"
+          role="progressbar"
+          style="width: {{ percent_used }}%; font-weight: bold;"
+          aria-valuenow="{{ percent_used|int }}"
+          aria-valuemin="0"
+          aria-valuemax="100">
+          {{ percent_used|round(2) }}%
+        </div>
+      </div>
+    </div>
+
     <!-- Go to File Explorer Button -->
     <div class="d-flex justify-content-end mb-4">
         <a href="{{ url_for('files') }}" class="btn btn-outline-primary">
