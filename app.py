@@ -270,12 +270,22 @@ def delete_chat(chat_id):
     flash(f"Group chat '{chat_id}' has been deleted.")
     return redirect("/admin")
 
+def get_directory_size(path):
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.isfile(fp):
+                total += os.path.getsize(fp)
+    return total
+
 @app.route("/admin")
 @login_required
 def admin():
     if current_user.username != "h":
         flash("Access denied: Admin privileges required.")
         return redirect("/")
+
     users = db.execute("SELECT username, hash FROM users")
     group_chats = db.execute("SELECT id FROM group_chats")
     images_base = os.path.join(os.getcwd(), "IMAGES")
@@ -286,10 +296,32 @@ def admin():
             if os.path.isdir(folder_path):
                 files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
                 image_folders[key] = files
-    return render_template("admin.html",
-                           users=users,
-                           group_chats=group_chats,
-                           image_folders=image_folders)
+
+    # Calculate root directory size (the one with app.py)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def get_directory_size(path):
+        total = 0
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                if os.path.isfile(fp):
+                    total += os.path.getsize(fp)
+        return total
+
+    root_size = get_directory_size(base_dir)
+    root_size_gb = root_size / (1024 ** 3)
+    percent_used = min(100, root_size / (1024 ** 3) * 100 / 1)  # out of 1GB
+
+    return render_template(
+        "admin.html",
+        users=users,
+        group_chats=group_chats,
+        image_folders=image_folders,
+        root_size=root_size,
+        root_size_gb=root_size_gb,
+        percent_used=percent_used
+    )
 
 @app.route('/delete_images_folder/<key>', methods=['POST'])
 @login_required
